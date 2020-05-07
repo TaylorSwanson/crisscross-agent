@@ -1,0 +1,8 @@
+{
+  "executable": "node ./test.js",
+  "functions": {
+    "heathcheck": "default",
+    "restart": "restart.sh",
+    "shutdown": "shutdown.sh"
+  }
+}
