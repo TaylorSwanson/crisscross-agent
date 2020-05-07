@@ -1,10 +1,12 @@
 // This module helps communicate with the peers by offering a server
+// Newer peers connect to this server as clients, this server connects as a
+// client to older peers
 
 const net = require("net");
 
 const config = require("config");
 
-const memcache = require("../memcache");
+const sharedcache = require("../sharedcache");
 const messager = require("../messager");
 const messageHandler = require("../../message-handlers");
 
@@ -19,7 +21,7 @@ const port = config.get("port");
 
 module.exports.start = function() {
   server = net.createServer(socket => {
-    packetDecoder(socket);
+    packetDecoder(socket, messageHandler);
 
     socket.on("end", () => {
       // Lost connection, looks intentional (FIN packet sent)

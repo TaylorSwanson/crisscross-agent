@@ -1,4 +1,5 @@
 {
   "suffix": "test",
-  "port": 1026
+  "port": 1026,
+  "configDbFolderName": "testxxdb"
 }

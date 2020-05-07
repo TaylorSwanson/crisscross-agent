@@ -1,5 +1,6 @@
 {
   "suffix": "dev",
   "port": 1052,
-  "useMultipass": true
+  "useMultipass": true,
+  "configDbFolderName": "defaultxxdb"
 }

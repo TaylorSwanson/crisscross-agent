@@ -32,6 +32,9 @@ const contentSizeBytes = 4; // Number of bytes to represent length of content
 // Handling of the stream must be done externally of this function, and this
 // function shouldn't care about that (will discard unfinished messages)
 module.exports = function(stream, handlerCallback) {
+  if (!handlerCallback || typeof handlerCallback != "function")
+    return console.error("Cannot have a packet decoder with no handler");
+
   let currentBuffer = Buffer.allocUnsafe(0);
   let hasHeader = false;
   let headerLength = 0;

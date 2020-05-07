@@ -1,17 +1,17 @@
-// Handles communication with other nodes
+// Handles communication with other nodes over TCP
+// This works both ways, sending messages to client peers and server peers
 
 const packetFactory = require("../../utils/static/packetFactory");
 
 
-const clientStreams = [];
+const clientConnections = [];
 
-
+// Add a client stream, doesn't matter if it's a server or a client stream
 module.exports.addClient = function(client) {
-  clientStreams.push(client);
+  clientConnections.push(client);
 };
-
 module.exports.removeClient = function(client) {
-  const idx = clientStreams.indexOf(client);
+  const idx = clientConnections.indexOf(client);
   if (idx === -1) {
     return console.log("Cannot remove non-existing client:", client);
   }
@@ -19,17 +19,25 @@ module.exports.removeClient = function(client) {
   // Remove client
   // Assumes that client has already been closed
   // TODO check this, if not close the connection here
-  clientStreams.splice(idx, 1);
+  clientConnections.splice(idx, 1);
 };
 
+// Sends messages to all connected peers
+// Callback throws error if peers are unreachable
 module.exports.messagePeers = function(payload, callback) {
-
+  // Message to send:
+  const packet = packetFactory.newPacket({ content: payload });
+  clientConnections.forEach(client => {
+    client.write(packet);
+  });
 };
 
+// Sends message to a specfic peer
 module.exports.messagePeer = function(payload, callback) {
 
 };
 
+// Sends a message to all peers and wait for all to respond
 module.exports.messagePeersAndWait = function(payload, callback) {
 
 };

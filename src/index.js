@@ -1,4 +1,5 @@
 // Main entrypoint for this system
+// This application is single-threaded and should be as minimal as possible
 
 const fs = require("fs");
 const os = require("os");
@@ -6,7 +7,7 @@ const crypto = require("crypto");
 const path = require("path");
 
 const hostserver = require("./modules/host-server");
-const memcache = require("./modules/memcache");
+const sharedcache = require("./modules/sharedcache");
 
 const packetFactory = require("./utils/static/packetFactory");
 
@@ -30,16 +31,15 @@ try {
 // Store the adhoc.json config
 const keys = Object.keys(instConfig);
 keys.forEach(key => {
-  memcache[key] = instConfig.key;
+  sharedcache[key] = instConfig.key;
 });
 
-// Give this instance a random name for the process (not hostname)
-memcache["processid"] = crypto.randomBytes(5).toString("hex");
+// Give this instance a random name for the process (not hostname or actual PID)
+sharedcache["processid"] = crypto.randomBytes(4).toString("hex");
 
 // Init server setup
 // TODO load server layout with DOAPI
 hostserver.start();
-
 
 packetFactory.newPacket({
   header: {
