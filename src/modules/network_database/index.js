@@ -28,16 +28,18 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const crypto = require("crypto");
 
 const config = require("config");
+const async = require("async");
 
-// Used to check document integrity
-const md5 = require("../../utils/static/md5");
+
+const md5 = require("md5");
 
 
 // Where to place db
-const folderName = config.get("configDbFolderName") || ".xxdb";
-const dbRootPath = path.join(os.homedir(), folderName);
+const configFolderName = config.get("configDbFolderName") || ".xxdb";
+const dbRootPath = path.join(os.homedir(), configFolderName);
 
 
 // DB folder create is sync, but the folder is created only on init so
@@ -47,7 +49,6 @@ if (!fs.existsSync(dbRootPath)) {
   fs.mkdirSync(dbRootPath);
 }
 
-
 // Puts the db in memory for faster access
 // This isn't necessary for most tasks, may be removed..
 module.exports.loadDbToMem = function(callback) {
@@ -56,7 +57,57 @@ module.exports.loadDbToMem = function(callback) {
 
 // Generates a checksum of the entire db
 module.exports.checksumDb = function(callback) {
-  
+  const filePaths = [];
+
+  async.waterfall([
+    function listFiles(callback) {
+      fs.readdir(dbRootPath);
+    },
+    function statFiles(fileList, callback) {
+      async.each(fileList, (fileName, callback) => {
+        const filePath = path.join(__dirname, fileName);
+        filePaths.push(filePath);
+
+        fs.stat(filePath, callback);
+      }, callback);
+    },
+    function sortFiles(fileStats, callback) {
+      const filtered = fileStats.filter((fileStat, idx) => {
+        // Ignore directories
+        const isIneligible = !fileStat.isDirectory() && fileStat.isFile();
+
+        // Remove ineligible files from the paths at idx
+        filePaths.splice(idx, 1);
+
+        return isIneligible;
+      });
+
+      callback(null, filtered);
+    },
+    function hashFiles(fileredFileStats, callback) {
+      async.each(filteredFileStats, (file, callback) => {
+        // Get file path from index of filteredFile
+        const idx = filteredFileStats.findIndex(file);
+
+        // Stream each file instead of reading to memory
+        const hash = crypto.createHash("sha1");
+        const filePath = filePaths[idx];
+        const fd = fs.createReadStream(filePath);
+
+        fd.on("error", callback(err)).pipe(hash);
+
+        fd.once("finish", () => {
+          callback(null, hash.digest("hex"));
+        });
+      });
+    },
+    function generateFinalHash(fileHashes, callback) {
+      // Join them all together
+      const concatenated = fileHashes.concat("");
+      // Hash the concatenated string for smaller size
+      callback(null, md5(concatenated));
+    }
+  ], callback);
 };
 
 // Completely remove db contents
@@ -66,5 +117,20 @@ module.exports.deleteDb = function(callback) {
 
 // Replaces all current DB content with specified dbContent
 module.exports.setDb = function(dbContnet, callback) {
+
+};
+
+// Updates the document
+module.exports.updateDoc = function(docName, content, callback) {
+
+};
+
+// Removes the document
+module.exports.deleteDoc = function(docName, callback) {
+
+};
+
+// Returns document content
+module.exports.getDoc = function(docName, callback) {
 
 };
