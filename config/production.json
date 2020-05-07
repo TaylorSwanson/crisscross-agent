@@ -1,5 +1,5 @@
 {
   "suffix": "prod",
   "port": 1025,
-  "configDbFolderName": "prodxxdb"
+  "configDbFolderName": "xxdb"
 }

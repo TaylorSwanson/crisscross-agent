@@ -26,7 +26,8 @@ module.exports.newPacket = function({ content, header }) {
   // Attach a small amount of metadata
   // xxh is short for crisscrossheader
   // Metadata could be useful for later features
-  header["xxh__messageid"] = crypto.randomBytes(4).toString("hex");
+  const packetId = crypto.randomBytes(4).toString("hex");
+  header["xxh__packetid"] = packetId;
   header["xxh__processid"] = sharedcache["processid"];
   header["xxh__sendtime"] = Date.now();
   
@@ -73,5 +74,8 @@ module.exports.newPacket = function({ content, header }) {
 
   // console.log("Generated packet", buf.toString("utf8"));
 
-  return buf;
+  return {
+    packet: buf,
+    id: packetId
+  };
 };

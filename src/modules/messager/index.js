@@ -1,8 +1,13 @@
 // Handles communication with other nodes over TCP
 // This works both ways, sending messages to client peers and server peers
 
-const packetFactory = require("../../utils/static/packetFactory");
+const config = require("config");
 
+const packetFactory = require("../../utils/static/packetFactory");
+const sharedcache = require("../sharedcache");
+
+
+const timeout = config.get("netTimeout") || 10000;
 
 const clientConnections = [];
 
@@ -23,17 +28,57 @@ module.exports.removeClient = function(client) {
 };
 
 // Sends messages to all connected peers
-// Callback throws error if peers are unreachable
-module.exports.messagePeers = function(payload, callback) {
+module.exports.messagePeers = function(type, payload) {
   // Message to send:
-  const packet = packetFactory.newPacket({ content: payload });
+  const packet = packetFactory.newPacket({
+    header: { type }, content: payload
+  }).packet;
   clientConnections.forEach(client => {
     client.write(packet);
   });
 };
 
 // Sends message to a specfic peer
-module.exports.messagePeer = function(payload, callback) {
+module.exports.messagePeer = function(type, payload, callback) {
+  
+};
+
+// Messages a peer and specifically waits for a reply
+module.exports.askPeer = function(type, payload, callback) {
+  const packet = packetFactory.newPacket({
+    header: { type }, content: payload
+  });
+  const packetId = packet.id;
+
+  // Store the handler/callback in the shared cache
+  if (!sharedcache.hasOwnProperty("pendingRequests")) {
+    sharedcache.pendingRequests = {};
+  }
+
+  // This handler will be called on reply or timeout regardless
+  // It is also responsible for cleaning up after itself
+  const fnHandler = (function() {
+    return function() {
+      clearInterval(timeoutId);
+
+      // Callback would receive (err, { header, content, stream });
+      callback(arguments);
+      // Remove this handler
+      delete sharedcache.pendingRequests[packetId];
+    }
+  })();
+
+  // Expire the response on timeout
+  const timeoutId = setTimeout(() => {
+    fnHandler(new Error("Reply timed out"));
+  }, timeout);
+
+  // Check for strange occurrences
+  if (sharedcache.pendingRequests.hasOwnProperty(packetId)) {
+    throw new Error(`Packet id collision (!) : ${packetId}`);
+  }
+
+  sharedcache.pendingRequests[packetId] = fnHandler();
 
 };
 
@@ -45,27 +90,27 @@ module.exports.messagePeersAndWait = function(payload, callback) {
 
 
 
-// Register worker with peers
-// Worker will be triggered by peers
-module.exports.registerWorkerTask = function(payload, callback) {
-  // Payload could contain options like:
-  // Worker name (name)
-  // Worker types (name or null)
-  // Interval (seconds)
+// // Register worker with peers
+// // Worker will be triggered by peers
+// module.exports.registerWorkerTask = function(payload, callback) {
+//   // Payload could contain options like:
+//   // Worker name (name)
+//   // Worker types (name or null)
+//   // Interval (seconds)
 
-  // Contact all nodes and tell them to stop performing tasks
-  module.exports.messagePeersAndWait({
-    message: "internal__register_task",
-    task: payload.taskname.trim().toLowerCase(),
-    types: payload.types ? payload.types : undefined,
-    interval: payload.interval || 600 // Default 10 minutes
-  }, callback);
-};
+//   // Contact all nodes and tell them to stop performing tasks
+//   module.exports.messagePeersAndWait({
+//     message: "internal__register_task",
+//     task: payload.taskname.trim().toLowerCase(),
+//     types: payload.types ? payload.types : undefined,
+//     interval: payload.interval || 600 // Default 10 minutes
+//   }, callback);
+// };
 
-module.exports.unregisterWorkerTask = function(taskname, callback) {
-  // Contact all nodes and tell them to stop performing tasks
-  module.exports.messagePeersAndWait({
-    message: "internal__unregister_task",
-    task: taskname
-  }, callback);
-};
+// module.exports.unregisterWorkerTask = function(taskname, callback) {
+//   // Contact all nodes and tell them to stop performing tasks
+//   module.exports.messagePeersAndWait({
+//     message: "internal__unregister_task",
+//     task: taskname
+//   }, callback);
+// };

@@ -47,22 +47,24 @@ module.exports.start = function() {
 
 // Removes a client connection
 module.exports.dropClient = function(ip, callback) {
-  // Find socket
-  if (!activeSockets.hasOwnProperty(ip))
-    return console.error("Could not drop non-existent client");
-  const socket = activeSockets[ip];
+  // // Find socket
+  // if (!activeSockets.hasOwnProperty(ip))
+  //   return console.error("Could not drop non-existent client");
+  // const socket = activeSockets[ip];
 
-  const packet = packetFactory.newPacket({
-    header: {
-      type: "internal__connecting_to_you"
-    },
-    content: {
-      yourIp: ip
-    }
-  });
+  // const packet = packetFactory.newPacket({
+  //   header: {
+  //     type: "internal__connecting_to_you"
+  //   },
+  //   content: {
+  //     yourIp: ip
+  //   }
+  // });
 
-  // Send last message to prevent reconnect, acknowledge
-  socket.end(packet, callback);
+  // // Send last message to prevent reconnect, acknowledge
+  // socket.end(packet, callback);
+
+  socket.end(null, callback);
 
   // Remove reference
   delete activeSockets[ip];

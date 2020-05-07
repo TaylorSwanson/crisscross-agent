@@ -2,5 +2,6 @@
   "suffix": "dev",
   "port": 1052,
   "useMultipass": true,
-  "configDbFolderName": "defaultxxdb"
+  "configDbFolderName": "defaultxxdb",
+  "netTimeout": 10000
 }
