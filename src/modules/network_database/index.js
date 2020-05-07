@@ -114,7 +114,6 @@ module.exports.checksumDb = function(callback) {
 
 // Completely remove db contents
 // This will fail if the folder or files within are in use
-// The recursive option is still experimental
 module.exports.deleteDb = function(callback) {
   fse.emptydir(dbRootPath, err => {
     if (err) return callback(err);
@@ -127,9 +126,11 @@ module.exports.deleteDb = function(callback) {
 
 // Replaces all current DB content with specified dbContent
 module.exports.replaceDb = function(dbContentStream, callback) {
-  // First delete the db
+  
   async.waterfall([
+    // First delete the db
     module.exports.deleteDb,
+    // Parse
     function replaceDb(callback) {
       let lineNumber = 0;
       // Take readable stream and parse it out into files again
@@ -137,7 +138,7 @@ module.exports.replaceDb = function(dbContentStream, callback) {
         lineNumber++;
         // Skip first/last line, we're interested in files only
         if (lineNumber === 1 || isLast) {
-          return callback();
+          return callback(true);
         }
 
         // This part will take the most memory
@@ -148,9 +149,10 @@ module.exports.replaceDb = function(dbContentStream, callback) {
         fse.writeFile(filename, Buffer.from(document.content, "hex"), err => {
           if (err) return callback(false);
           callback(true);
-        })
+        });
       }, callback);
     }
+
   ], callback);
 };
 
@@ -204,15 +206,6 @@ module.exports.exportDb = function(callback, stream, callback) {
         // Start reading file
         const fd = fse.createReadStream(filePath);
 
-        // // fd.on("error", callback(err)).pipe()
-        // // const pipeline = stream.pipeline;
-        // const gzip = zlib.createGzip();
-
-        // // Read file, gzip, pipe to stream
-        // pipeline(fd, gzip, stream, err => {
-        //   return callback(err);
-        // });
-
         fd.on("data", chunk => {
           writeStream.write(chunk.toString("hex"));
         });
@@ -241,16 +234,28 @@ module.exports.exportDb = function(callback, stream, callback) {
 };
 
 // Updates the document, creates if not exists
+// Content can be anything accepted by writeFile
 module.exports.updateDoc = function(docName, content, callback) {
-
+  const filename = path.join(dbRootPath, docName);
+  
+  fse.writeFile(filename, content, callback);
 };
 
 // Removes the document
 module.exports.deleteDoc = function(docName, callback) {
+  const filename = path.join(dbRootPath, docName);
 
+  fse.remove(filename, callback);
 };
 
 // Returns document content
 module.exports.getDoc = function(docName, callback) {
+  const filename = path.join(dbRootPath, docName);
 
+  fse.pathExists(filename, (err, exists) => {
+    if (err) return callback(err);
+    if (!exists) return null;
+
+    fse.readFile(filename, callback);
+  })
 };
