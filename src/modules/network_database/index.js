@@ -32,7 +32,7 @@ const crypto = require("crypto");
 
 const config = require("config");
 const async = require("async");
-
+const lineReader = require("line-reader");
 
 const md5 = require("md5");
 
@@ -126,17 +126,35 @@ module.exports.deleteDb = function(callback) {
 };
 
 // Replaces all current DB content with specified dbContent
-module.exports.setDb = function(dbContnet, callback) {
+module.exports.replaceDb = function(dbContentStream, callback) {
   // First delete the db
   async.waterfall([
     module.exports.deleteDb,
     function replaceDb(callback) {
-      // TODO how to send db data? Need a way to serialize/deserialize data
+      let lineNumber = 0;
+      // Take readable stream and parse it out into files again
+      lineReader.eachLine(dbContentStream, (line, isLast, callback) => {
+        lineNumber++;
+        // Skip first/last line, we're interested in files only
+        if (lineNumber === 1 || isLast) {
+          return callback();
+        }
+
+        // This part will take the most memory
+        // Larger documents will take more ram
+        const document = JSON.parse(line);
+        const filename = path.join(dbRootPath, document.name);
+        // Create the file from the hex contents of the json object
+        fse.writeFile(filename, Buffer.from(document.content, "hex"), err => {
+          if (err) return callback(false);
+          callback(true);
+        })
+      }, callback);
     }
   ], callback);
 };
 
-// Exports entire db into one file to be serialized
+// Exports entire db into one file to be read later
 // Data will be streamed into a json file containing individual files
 // This means json file will be built manually during stream
 // Stream is a writeable file stream that is returned, consider gzipping it
@@ -145,8 +163,10 @@ module.exports.exportDb = function(callback, stream, callback) {
 
   const writeStream = fse.createWriteStream();
 
+  // Each file is on a newline so that it can be parsed line-by-line
+
   // Start constructing json
-  writeStream.write(`{"files":[`);
+  writeStream.write(`{"time":"${Date.now()}",files":[\n`);
 
   async.waterfall([
     function listFiles(callback) {
@@ -204,6 +224,8 @@ module.exports.exportDb = function(callback, stream, callback) {
           // Add comma if this is not the last file
           if (idx < filePaths.length - 1)
             writeStream.write(`,`);
+          
+          writeStream.write(`\n`);
           callback();
         });
       });
@@ -212,13 +234,13 @@ module.exports.exportDb = function(callback, stream, callback) {
     },
     function closeJson(callback) {
       // This just closes the opening tag
-      writeStream.write(`]}\n`);
+      writeStream.write(`\n]}\n`);
       callback();
     }
   ], callback);
 };
 
-// Updates the document
+// Updates the document, creates if not exists
 module.exports.updateDoc = function(docName, content, callback) {
 
 };
