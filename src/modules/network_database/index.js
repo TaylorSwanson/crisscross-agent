@@ -51,16 +51,9 @@ function createDbFolder() {
   }
 }
 
-// Puts the db in memory for faster access
-// This isn't necessary for most tasks, may be removed..
-module.exports.loadDbToMem = function(callback) {
-
-};
-
-// Generates a checksum of the entire db
-module.exports.checksumDb = function(callback) {
+function getDocPaths(callback) {
   const filePaths = [];
-
+  
   async.waterfall([
     function listFiles(callback) {
       fse.readdir(dbRootPath);
@@ -81,19 +74,41 @@ module.exports.checksumDb = function(callback) {
         // Remove ineligible files from the paths at idx
         filePaths.splice(idx, 1);
 
-        return isIneligible;
+        return !isIneligible;
       });
 
-      callback(null, filtered);
-    },
-    function hashFiles(fileredFileStats, callback) {
-      async.each(filteredFileStats, (file, callback) => {
-        // Get file path from index of filteredFile
-        const idx = filteredFileStats.findIndex(file);
+      callback(null, filePaths);
+    }
+
+  ], callback);
+}
+
+// Puts the db in memory for faster access
+// This isn't necessary for most tasks, may be removed..
+module.exports.loadDbToMem = function(callback) {
+
+};
+
+// Returns a list of documents in the db
+module.exports.getDocListing = function(callback) {
+  getDocPaths((err, paths) => {
+    if (err) return callback(err);
+
+    callback(null, paths.map(p => {
+      return path.basename(p);
+    }));
+  });
+};
+
+// Generates a checksum of the entire db
+module.exports.checksumDb = function(callback) {
+  async.waterfall([
+    getDocPaths,
+    function hashFiles(filePaths, callback) {
+      async.each(filePaths, (filePath, callback) => {
 
         // Stream each file instead of reading to memory
         const hash = crypto.createHash("sha1");
-        const filePath = filePaths[idx];
         const fd = fse.createReadStream(filePath);
 
         fd.on("error", callback(err)).pipe(hash);
@@ -160,85 +175,20 @@ module.exports.replaceDb = function(dbContentStream, callback) {
 // Data will be streamed into a json file containing individual files
 // This means json file will be built manually during stream
 // Stream is a writeable file stream that is returned, consider gzipping it
-module.exports.exportDb = function(callback, stream, callback) {
-  const filePaths = [];
-
-  const writeStream = fse.createWriteStream();
-
-  // Each file is on a newline so that it can be parsed line-by-line
-
-  // Start constructing json
-  writeStream.write(`{"time":"${Date.now()}",files":[\n`);
-
-  async.waterfall([
-    function listFiles(callback) {
-      fse.readdir(dbRootPath);
-    },
-    function statFiles(fileList, callback) {
-      async.each(fileList, (fileName, callback) => {
-        const filePath = path.join(__dirname, fileName);
-        filePaths.push(filePath);
-
-        fse.stat(filePath, callback);
-      }, callback);
-    },
-    function sortFiles(fileStats, callback) {
-      const filtered = fileStats.filter((fileStat, idx) => {
-        // Ignore directories
-        const isIneligible = !fileStat.isDirectory() || !fileStat.isFile();
-
-        // Remove ineligible files from the paths at idx
-        filePaths.splice(idx, 1);
-
-        return isIneligible;
-      });
-
-      callback(null, filtered);
-    },
-    function buildOutput(fileredFileStats, callback) {
-      filteredFileStats.forEach((fileStat, idx) => {
-        const filePath = filePaths[idx];
-
-        // Construct json
-        const fileName = path.basename(filePath);
-        writeStream.write(`{"name":"${fileName}","content":"`); // ...
-
-        // Start reading file
-        const fd = fse.createReadStream(filePath);
-
-        fd.on("data", chunk => {
-          writeStream.write(chunk.toString("hex"));
-        });
-
-        fd.once("finish", () => {
-          // End line of content
-          writeStream.write(`"}`);
-
-          // Add comma if this is not the last file
-          if (idx < filePaths.length - 1)
-            writeStream.write(`,`);
-          
-          writeStream.write(`\n`);
-          callback();
-        });
-      });
-
-      callback();
-    },
-    function closeJson(callback) {
-      // This just closes the opening tag
-      writeStream.write(`\n]}\n`);
-      callback();
-    }
-  ], callback);
-};
+module.exports.exportDb = require("./exportDb");
 
 // Updates the document, creates if not exists
 // Content can be anything accepted by writeFile
 module.exports.updateDoc = function(docName, content, callback) {
   const filename = path.join(dbRootPath, docName);
-  
+
   fse.writeFile(filename, content, callback);
+};
+
+// If doc is json, then apply changes in content and add fields
+// Creates doc if not exists
+module.exports.editJsonDoc = function(docName, content, callback) {
+
 };
 
 // Removes the document
@@ -257,5 +207,5 @@ module.exports.getDoc = function(docName, callback) {
     if (!exists) return null;
 
     fse.readFile(filename, callback);
-  })
+  });
 };

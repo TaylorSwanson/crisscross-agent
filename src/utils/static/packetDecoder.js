@@ -27,7 +27,7 @@ const contentSizeBytes = 4; // Number of bytes to represent length of content
 
 // Pass a string to the decoder and it will continuously deconstruct packets
 // handlerCallback should be defined as a function that takes the arguments for
-// each packet that is received
+// each packet that is received { header, content, stream }
 
 // Handling of the stream must be done externally of this function, and this
 // function shouldn't care about that (will discard unfinished messages)

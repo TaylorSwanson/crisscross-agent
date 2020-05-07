@@ -21,6 +21,7 @@ const port = config.get("port");
 
 module.exports.start = function() {
   server = net.createServer(socket => {
+    // This lets the server handle incoming messages with the message handlers
     packetDecoder(socket, messageHandler);
 
     socket.on("end", () => {

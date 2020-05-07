@@ -33,6 +33,7 @@ if (Object.getOwnPropertyNames(handlers).length === 0)
   console.log("No message handlers found");
 
 // Call workerHandlers() with payload and the master can send info to workers
+// { header, content, stream }
 module.exports = function(payload) {
   // Problems
   if (!payload.content)
