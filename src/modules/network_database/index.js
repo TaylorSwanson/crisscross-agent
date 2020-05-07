@@ -25,7 +25,7 @@
 
 // DB is essentially a document db
 
-const fs = require("fs");
+const fse = require("fs-extra");
 const path = require("path");
 const os = require("os");
 const crypto = require("crypto");
@@ -42,11 +42,13 @@ const configFolderName = config.get("configDbFolderName") || ".xxdb";
 const dbRootPath = path.join(os.homedir(), configFolderName);
 
 
-// DB folder create is sync, but the folder is created only on init so
-// it shouldn't affect application performance
-// Create if not exists
-if (!fs.existsSync(dbRootPath)) {
-  fs.mkdirSync(dbRootPath);
+function createDbFolder() {
+  // DB folder create is sync, but the folder is created only on init so
+  // it shouldn't affect application performance
+  // Create if not exists
+  if (!fse.existsSync(dbRootPath)) {
+    fse.mkdirSync(dbRootPath);
+  }
 }
 
 // Puts the db in memory for faster access
@@ -61,20 +63,20 @@ module.exports.checksumDb = function(callback) {
 
   async.waterfall([
     function listFiles(callback) {
-      fs.readdir(dbRootPath);
+      fse.readdir(dbRootPath);
     },
     function statFiles(fileList, callback) {
       async.each(fileList, (fileName, callback) => {
         const filePath = path.join(__dirname, fileName);
         filePaths.push(filePath);
 
-        fs.stat(filePath, callback);
+        fse.stat(filePath, callback);
       }, callback);
     },
     function sortFiles(fileStats, callback) {
       const filtered = fileStats.filter((fileStat, idx) => {
         // Ignore directories
-        const isIneligible = !fileStat.isDirectory() && fileStat.isFile();
+        const isIneligible = !fileStat.isDirectory() || !fileStat.isFile();
 
         // Remove ineligible files from the paths at idx
         filePaths.splice(idx, 1);
@@ -92,14 +94,14 @@ module.exports.checksumDb = function(callback) {
         // Stream each file instead of reading to memory
         const hash = crypto.createHash("sha1");
         const filePath = filePaths[idx];
-        const fd = fs.createReadStream(filePath);
+        const fd = fse.createReadStream(filePath);
 
         fd.on("error", callback(err)).pipe(hash);
 
         fd.once("finish", () => {
           callback(null, hash.digest("hex"));
         });
-      });
+      }, callback);
     },
     function generateFinalHash(fileHashes, callback) {
       // Join them all together
@@ -111,13 +113,109 @@ module.exports.checksumDb = function(callback) {
 };
 
 // Completely remove db contents
+// This will fail if the folder or files within are in use
+// The recursive option is still experimental
 module.exports.deleteDb = function(callback) {
+  fse.emptydir(dbRootPath, err => {
+    if (err) return callback(err);
 
+    // Recreate db folder just in case it was removed (but why? No harm in it)
+    createDbFolder();
+    callback();
+  });
 };
 
 // Replaces all current DB content with specified dbContent
 module.exports.setDb = function(dbContnet, callback) {
+  // First delete the db
+  async.waterfall([
+    module.exports.deleteDb,
+    function replaceDb(callback) {
+      // TODO how to send db data? Need a way to serialize/deserialize data
+    }
+  ], callback);
+};
 
+// Exports entire db into one file to be serialized
+// Data will be streamed into a json file containing individual files
+// This means json file will be built manually during stream
+// Stream is a writeable file stream that is returned, consider gzipping it
+module.exports.exportDb = function(callback, stream, callback) {
+  const filePaths = [];
+
+  const writeStream = fse.createWriteStream();
+
+  // Start constructing json
+  writeStream.write(`{"files":[`);
+
+  async.waterfall([
+    function listFiles(callback) {
+      fse.readdir(dbRootPath);
+    },
+    function statFiles(fileList, callback) {
+      async.each(fileList, (fileName, callback) => {
+        const filePath = path.join(__dirname, fileName);
+        filePaths.push(filePath);
+
+        fse.stat(filePath, callback);
+      }, callback);
+    },
+    function sortFiles(fileStats, callback) {
+      const filtered = fileStats.filter((fileStat, idx) => {
+        // Ignore directories
+        const isIneligible = !fileStat.isDirectory() || !fileStat.isFile();
+
+        // Remove ineligible files from the paths at idx
+        filePaths.splice(idx, 1);
+
+        return isIneligible;
+      });
+
+      callback(null, filtered);
+    },
+    function buildOutput(fileredFileStats, callback) {
+      filteredFileStats.forEach((fileStat, idx) => {
+        const filePath = filePaths[idx];
+
+        // Construct json
+        const fileName = path.basename(filePath);
+        writeStream.write(`{"name":"${fileName}","content":"`); // ...
+
+        // Start reading file
+        const fd = fse.createReadStream(filePath);
+
+        // // fd.on("error", callback(err)).pipe()
+        // // const pipeline = stream.pipeline;
+        // const gzip = zlib.createGzip();
+
+        // // Read file, gzip, pipe to stream
+        // pipeline(fd, gzip, stream, err => {
+        //   return callback(err);
+        // });
+
+        fd.on("data", chunk => {
+          writeStream.write(chunk.toString("hex"));
+        });
+
+        fd.once("finish", () => {
+          // End line of content
+          writeStream.write(`"}`);
+
+          // Add comma if this is not the last file
+          if (idx < filePaths.length - 1)
+            writeStream.write(`,`);
+          callback();
+        });
+      });
+
+      callback();
+    },
+    function closeJson(callback) {
+      // This just closes the opening tag
+      writeStream.write(`]}\n`);
+      callback();
+    }
+  ], callback);
 };
 
 // Updates the document
