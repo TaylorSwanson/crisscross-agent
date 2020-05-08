@@ -19,7 +19,10 @@ module.exports = function({ header, content, stream }) {
   if (!sharedcache.pendingRequests.hasOwnProperty(header["xxh__responseto"]))
     return console.log("Pending request is closed:", header["xxh__responseto"]);
   
-  // Trigger the callback~
+  // Trigger the callback
   const cbFunction = sharedcache.pendingRequests[header["xxh__responseto"]];
+  if (typeof cbFunction != "function")
+    throw new Error("Network reply callback must be a function");
+
   cbFunction(null, { header, content, stream });
 };
