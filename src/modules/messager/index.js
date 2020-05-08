@@ -1,13 +1,11 @@
 // Handles communication with other nodes over TCP
 // This works both ways, sending messages to client peers and server peers
 
-const config = require("config");
+const async = require("async");
 
 const packetFactory = require("../../utils/static/packetFactory");
 const sharedcache = require("../sharedcache");
 
-
-const timeout = config.get("netTimeout") || 10000;
 
 const clientConnections = [];
 
@@ -27,31 +25,11 @@ module.exports.removeClient = function(client) {
   clientConnections.splice(idx, 1);
 };
 
-// Sends messages to all connected peers
-module.exports.messagePeers = function(type, payload) {
-  // Message to send:
-  const packet = packetFactory.newPacket({
-    header: { type }, content: payload
-  }).packet;
-  clientConnections.forEach(client => {
-    client.write(packet);
-  });
-};
-
 // Sends message to a specfic peer
-module.exports.messagePeer = function(type, payload, callback) {
-  
-};
-
-// Messages a peer and specifically waits for a reply
-// If timeout set to 0, wait indefinitely
-// Timeout is optional
-module.exports.askPeer = function(socket, type, payload, timeout, callback) {
-  if (!callback && typeof timeout == "function") {
-    callback = timeout;
-  } else if (callback) {
-    throw new Error("Expected 3 parameters, got 4");
-  }
+// If wait == -1 then it will not time out
+// If wait == 0/undefined/null then it will not wait
+// If wait > 0, the timeout is number of ms to timeout
+module.exports.messagePeer = function(socket, type, payload, wait, callback) {
 
   const packet = packetFactory.newPacket({
     header: { type }, content: payload
@@ -70,65 +48,66 @@ module.exports.askPeer = function(socket, type, payload, timeout, callback) {
 
 
   // Start sending the packet
-  socket.write(packet);
-
-
-
-  // This handler will be called on reply or timeout regardless
-  // It is also responsible for cleaning up after itself
-  const fnHandler = (function() {
-    return function() {
-      clearInterval(timeoutId);
-
-      // Callback would receive (err, { header, content, stream });
-      callback(arguments);
-      // Remove this handler
+  socket.write(packet, callback);
+  socket.on("error", err => {
+    if (wait > 0 || wait === -1) {
+      // Need to remove any handler
       delete sharedcache.pendingRequests[packetId];
     }
-  })();
+    
+    return callback(err);
+  });
+  // // IDEA? Count bytes written and callback when the packet length is written
+  // socket.on("drain", callback);
 
-  // Expire the response on timeout
-  // IDEA start timeout when client is fully received?
-  // IDEA https://nodejs.org/api/net.html#net_socket_byteswritten
-  if (timeout !== 0) {
-    const timeoutId = setTimeout(() => {
-      fnHandler(new Error("Reply timed out"));
-    }, timeout);
+
+
+  // Store timeout ref in case the user has a timeout function
+  let timeoutId;
+
+  if (wait > 0 || wait === -1) {
+    // User specified that the message should await reply
+
+    // This handler will be called on reply or timeout regardless
+    // It is also responsible for cleaning up after itself
+    const fnHandler = (function() {
+      return function() {
+        clearInterval(timeoutId);
+
+        // Callback would receive (err, { header, content, stream });
+        callback(arguments);
+        // Remove this handler
+        delete sharedcache.pendingRequests[packetId];
+      }
+    })();
+
+    // Save the pending request
+    sharedcache.pendingRequests[packetId] = fnHandler();
+  } else {
+    
   }
 
-  sharedcache.pendingRequests[packetId] = fnHandler();
+  if (wait > 0) {
+    // User specified that the message should have a timeout
 
+    // Expire the response on timeout
+    // IDEA start timeout when client is fully received?
+    // IDEA https://nodejs.org/api/net.html#net_socket_byteswritten
+    timeoutId = setTimeout(() => {
+      fnHandler(new Error("Reply timed out"));
+    }, wait);
+  }
 };
 
-// Sends a message to all peers and wait for all to respond
-module.exports.messagePeersAndWait = function(payload, callback) {
 
+// Sends messages to all connected peers
+// If wait == -1 then it will not time out
+// If wait == 0/undefined/null then it will not wait
+// If wait > 0, the timeout is number of ms to timeout
+module.exports.messageAllPeers = function(type, payload, wait, callback) {
+  // Message to send:
+  async.each(clientConnections, (client, callback) => {
+    module.exports.messagePeer(client, type, payload, wait, callback);
+  }, callback);
 };
 
-
-
-
-// // Register worker with peers
-// // Worker will be triggered by peers
-// module.exports.registerWorkerTask = function(payload, callback) {
-//   // Payload could contain options like:
-//   // Worker name (name)
-//   // Worker types (name or null)
-//   // Interval (seconds)
-
-//   // Contact all nodes and tell them to stop performing tasks
-//   module.exports.messagePeersAndWait({
-//     message: "internal__register_task",
-//     task: payload.taskname.trim().toLowerCase(),
-//     types: payload.types ? payload.types : undefined,
-//     interval: payload.interval || 600 // Default 10 minutes
-//   }, callback);
-// };
-
-// module.exports.unregisterWorkerTask = function(taskname, callback) {
-//   // Contact all nodes and tell them to stop performing tasks
-//   module.exports.messagePeersAndWait({
-//     message: "internal__unregister_task",
-//     task: taskname
-//   }, callback);
-// };

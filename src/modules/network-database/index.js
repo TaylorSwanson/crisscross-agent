@@ -433,13 +433,13 @@ module.exports.updateDoc = function(docName, content, callback) {
   ], callback);
 };
 
-// If doc is json, then apply changes in content and add fields
-// Creates doc if not exists
-module.exports.editJsonDoc = function(docName, content, callback) {
-  if (isLocked) return callback(new Error("DB is locked"));
-  // lock();
+// // If doc is json, then apply changes in content and add fields
+// // Creates doc if not exists
+// module.exports.editJsonDoc = function(docName, content, callback) {
+//   if (isLocked) return callback(new Error("DB is locked"));
+//   // lock();
 
-};
+// };
 
 // Removes the document
 module.exports.deleteDoc = function(docName, callback) {

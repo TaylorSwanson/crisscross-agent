@@ -10,13 +10,14 @@ const ReadableString = require("../utils/static/ReadableString");
 
 
 module.exports = function({ header, content, stream }) {
-  const num = Math.floor(Math.random() * (Number.MAX_SAFE_INTEGER - 1));
 
+  // Build response based on requested behavior
   const responseContent = {};
 
-  // Call can be for any db action
+  // Call can be for any db action that has a handler
   const dbMethod = content.dbMethod;
 
+  // Handlers should have the same names as networkDatabase fns
   const handlers = {
     getDocListing: function(callback) {
       networkDatabase.getDocListing(callback);
@@ -36,7 +37,7 @@ module.exports = function({ header, content, stream }) {
       // Like a pointer
       let stream;
       // Stream chunks come in as Buffers
-      const buffers = [];
+      let buffers = [];
       // Stream out, ignore callback
       networkDatabase.exportDb(stream, () => {});
       // Converting stream to a single buffer
