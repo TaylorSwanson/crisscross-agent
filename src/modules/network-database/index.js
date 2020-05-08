@@ -322,8 +322,8 @@ module.exports.replaceDb = function(dbContentStream, callback) {
 };
 
 
-// Exports entire db into one file to be read later
-// Data will be streamed into a json file containing individual files
+// Exports entire db into one stream to be read later
+// Data will be streamed into a json readable containing individual files
 // This means json file will be built manually during stream
 // Stream is a writeable file stream that is returned, consider gzipping it
 
@@ -389,7 +389,7 @@ const exportDb = () => {
           // Add comma if this is not the last file
           if (idx < filePaths.length - 1)
             writeStream.write(`,`);
-          
+           
           writeStream.write(`\n`);
           callback();
         });
@@ -404,7 +404,7 @@ const exportDb = () => {
     }
   ], callback);
 };
-module.exports.exportDb = function(callback, stream, callback) {
+module.exports.exportDb = function(stream, callback) {
   if (isLocked) return callback(new Error("DB is locked"));
   
   async.series([
@@ -428,6 +428,7 @@ module.exports.updateDoc = function(docName, content, callback) {
       const filename = path.join(dbRootPath, docName);
 
       fse.writeFile(filename, content, callback);
+    },
     unlock
   ], callback);
 };

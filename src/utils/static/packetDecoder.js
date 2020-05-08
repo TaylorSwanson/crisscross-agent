@@ -124,6 +124,7 @@ module.exports = function(stream, handlerCallback) {
     const contentPending = contentLength - contentReceived;
 
     // Message complete
+    // NOTE this makes streaming not possible
     if (contentPending <= 0) {
       // Must be the beginning of the next message if more comes through than stated
       // Cut out the remaining content and reset the buffer to contain the overflow data

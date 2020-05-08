@@ -46,7 +46,7 @@ module.exports.messagePeer = function(type, payload, callback) {
 // Messages a peer and specifically waits for a reply
 // If timeout set to 0, wait indefinitely
 // Timeout is optional
-module.exports.askPeer = function(type, payload, timeout, callback) {
+module.exports.askPeer = function(socket, type, payload, timeout, callback) {
   if (!callback && typeof timeout == "function") {
     callback = timeout;
   } else if (callback) {
@@ -63,6 +63,17 @@ module.exports.askPeer = function(type, payload, timeout, callback) {
     sharedcache.pendingRequests = {};
   }
 
+  // Check for strange occurrences
+  if (sharedcache.pendingRequests.hasOwnProperty(packetId)) {
+    throw new Error(`Packet id collision (!) : ${packetId}`);
+  }
+
+
+  // Start sending the packet
+  socket.write(packet);
+
+
+
   // This handler will be called on reply or timeout regardless
   // It is also responsible for cleaning up after itself
   const fnHandler = (function() {
@@ -77,15 +88,12 @@ module.exports.askPeer = function(type, payload, timeout, callback) {
   })();
 
   // Expire the response on timeout
+  // IDEA start timeout when client is fully received?
+  // IDEA https://nodejs.org/api/net.html#net_socket_byteswritten
   if (timeout !== 0) {
     const timeoutId = setTimeout(() => {
       fnHandler(new Error("Reply timed out"));
     }, timeout);
-  }
-
-  // Check for strange occurrences
-  if (sharedcache.pendingRequests.hasOwnProperty(packetId)) {
-    throw new Error(`Packet id collision (!) : ${packetId}`);
   }
 
   sharedcache.pendingRequests[packetId] = fnHandler();
