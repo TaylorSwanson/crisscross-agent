@@ -44,7 +44,15 @@ module.exports.messagePeer = function(type, payload, callback) {
 };
 
 // Messages a peer and specifically waits for a reply
-module.exports.askPeer = function(type, payload, callback) {
+// If timeout set to 0, wait indefinitely
+// Timeout is optional
+module.exports.askPeer = function(type, payload, timeout, callback) {
+  if (!callback && typeof timeout == "function") {
+    callback = timeout;
+  } else if (callback) {
+    throw new Error("Expected 3 parameters, got 4");
+  }
+
   const packet = packetFactory.newPacket({
     header: { type }, content: payload
   });
@@ -69,9 +77,11 @@ module.exports.askPeer = function(type, payload, callback) {
   })();
 
   // Expire the response on timeout
-  const timeoutId = setTimeout(() => {
-    fnHandler(new Error("Reply timed out"));
-  }, timeout);
+  if (timeout !== 0) {
+    const timeoutId = setTimeout(() => {
+      fnHandler(new Error("Reply timed out"));
+    }, timeout);
+  }
 
   // Check for strange occurrences
   if (sharedcache.pendingRequests.hasOwnProperty(packetId)) {

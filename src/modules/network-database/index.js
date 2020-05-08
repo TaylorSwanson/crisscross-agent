@@ -46,7 +46,7 @@ const dbRootPath = path.join(os.homedir(), configFolderName);
 
 // 2 minutes
 const unlockTimeoutWarnMs = 120000;
-const unlockCheckIntervalMs = 500;
+const unlockCheckIntervalMs = 100;
 
 // Locking mechanism
 let isLocked = false;
@@ -56,13 +56,15 @@ let isLocked = false;
 let cantUnlock = false;
 
 // Simple helper so that cantUnlock is always set because it makes sense
-function lock() {
-  isLocked = true;
-  cantUnlock = true;
+function lock(callback) {
+  // isLocked = true;
+  // cantUnlock = true;
+  module.exports.setLock(true, callback);
 }
 function unlock() {
-  isLocked = false;
-  cantUnlock = false;
+  // isLocked = false;
+  // cantUnlock = false;
+  module.exports.setLock(false, callback);
 }
 
 // Creates the db folder at the right location if not exists
@@ -113,12 +115,19 @@ function getDocPaths(callback) {
 // Unlock action is not immediate until the current processes have finished
 // Callback issued when lock is changed, err on unlock attempts
 module.exports.setLock = function(lockStatus, callback) {
+  //
+  if (lockStatus == isLocked)
+    console.log(`Lock state already matches requested lock: ${lockStatus}`);
+
+  // Lock db
   if (lockStatus) return (isLocked = true) && callback();
 
-  // Unlocking db
+  // Unlocking db only if it's possible,
+  // if not we'll continue and have to wait
   if (!cantUnlock) return (isLocked = false) && callback();
 
   // Will be a rough estimate
+  // This is for analytics mostly
   let passedIntervalMs = 0;
 
   // DB is busy, we'll wait and check every unlockCheckIntervalMs roughly
@@ -149,7 +158,7 @@ module.exports.setLock = function(lockStatus, callback) {
 // Wait for db to be ready and unlocked
 // This should be called before db functions, otherwise an error will be thrown
 // if the db is already locked
-module.exports.waitForReady = function(callback) {
+function waitForReady(callback) {
   if (!isLocked) return callback();
   
   // Similar to above but doesn't work with cantUnlock variable
@@ -170,10 +179,11 @@ module.exports.waitForReady = function(callback) {
 
     // Show message if this is the first time it's passed the interval
     if (exceededInterval && isFirstOverage) {
-      console.warn(`DB lock check interval ${unlockTimeoutWarnMs}ms exceeded`);
+      console.warn(`DB wait check interval ${unlockTimeoutWarnMs}ms exceeded`);
     }
   }, unlockCheckIntervalMs);
 };
+module.exports.waitForReady = waitForReady;
 
 // Returns a progress update if any task is running
 // TODO requires a method to update task status
@@ -184,24 +194,26 @@ module.exports.getProgress = function(callback) {
 // Returns a list of documents in the db
 module.exports.getDocListing = function(callback) {
   if (isLocked) return callback(new Error("DB is locked"));
-  lock();
 
-  getDocPaths((err, paths) => {
-    if (err) return callback(err);
-
-    callback(null, paths.map(p => {
-      return path.basename(p);
-    }));
-
-    unlock();
-  });
+  async.series([
+    waitForReady,
+    lock,
+    function(callback) {
+      getDocPaths((err, paths) => {
+        if (err) return callback(err);
+    
+        callback(null, paths.map(p => {
+          return path.basename(p);
+        }));
+      });
+    },
+    unlock
+  ], callback);
 };
 
-// Generates a checksum of the entire db
-module.exports.checksumDb = function(callback) {
-  if (isLocked) return callback(new Error("DB is locked"));
-  lock();
-
+// Arrow fn for scope
+// This is simply split out of checksumDb for convenience
+const computeChecksumFn = () => {
   async.waterfall([
     getDocPaths,
     function hashFiles(filePaths, callback) {
@@ -224,33 +236,49 @@ module.exports.checksumDb = function(callback) {
       // Hash the concatenated string for smaller size
       callback(null, md5(concatenated));
     }
-  ], (err, result) => {
-    unlock();
-    callback(err, results);
-  });
+  ], callback);
+};
+
+// Generates a checksum of the entire db
+module.exports.checksumDb = function(callback) {
+  if (isLocked) return callback(new Error("DB is locked"));
+
+  // If it doesn't work, try binding computeChecksumFn...
+  async.series([
+    waitForReady,
+    lock,
+    computeChecksumFn,
+    unlock
+  ], callback);
 };
 
 // Completely remove db contents
 // This will fail if the folder or files within are in use
 module.exports.deleteDb = function(callback) {
   if (isLocked) return callback(new Error("DB is locked"));
-  lock();
 
-  fse.emptydir(dbRootPath, err => {
-    if (err) return callback(err);
-
-    // Recreate db folder just in case it was removed (but why? No harm in it)
-    createDbFolder();
-    unlock();
-    callback();
-  });
+  async.series([
+    waitForReady,
+    lock,
+    function(callback) {
+      fse.emptydir(dbRootPath, err => {
+        if (err) return callback(err);
+    
+        // Recreate db folder just in case it was removed (No harm in it)
+        // Call is sync
+        createDbFolder();
+        callback();
+      });
+    },
+    unlock
+  ], callback);
 };
 
+
 // Replaces all current DB content with specified dbContent
-module.exports.replaceDb = function(dbContentStream, callback) {
-  if (isLocked) return callback(new Error("DB is locked"));
-  lock();
-  
+// Arrow fn for scope
+// This is simply split out of replaceDb for convenience
+const replaceDb = () => {
   async.waterfall([
     // First delete the db
     module.exports.deleteDb,
@@ -282,19 +310,32 @@ module.exports.replaceDb = function(dbContentStream, callback) {
     callback(err, results);
   });
 };
+module.exports.replaceDb = function(dbContentStream, callback) {
+  if (isLocked) return callback(new Error("DB is locked"));
+  
+  async.series([
+    waitForReady,
+    lock,
+    replaceDb,
+    unlock
+  ], callback);
+};
+
 
 // Exports entire db into one file to be read later
 // Data will be streamed into a json file containing individual files
 // This means json file will be built manually during stream
 // Stream is a writeable file stream that is returned, consider gzipping it
-module.exports.exportDb = function(callback, stream, callback) {
-  if (isLocked) return callback(new Error("DB is locked"));
-  lock();
 
-
+// Arrow fn for scope
+// This is simply split out of exportDb for convenience
+const exportDb = () => {
   const filePaths = [];
 
-  const writeStream = fse.createWriteStream();
+  // const writeStream = fse.createWriteStream();
+
+  // Use stream passed to fn
+  const writeStream = stream;
 
   // Each file is on a newline so that it can be parsed line-by-line
 
@@ -303,7 +344,7 @@ module.exports.exportDb = function(callback, stream, callback) {
 
   async.waterfall([
     function listFiles(callback) {
-      fse.readdir(dbRootPath);
+      fse.readdir(dbRootPath, callback);
     },
     function statFiles(fileList, callback) {
       async.each(fileList, (fileName, callback) => {
@@ -361,10 +402,17 @@ module.exports.exportDb = function(callback, stream, callback) {
       writeStream.write(`\n]}\n`);
       callback();
     }
-  ], (err, result) => {
-    unlock();
-    callback(err, results);
-  });
+  ], callback);
+};
+module.exports.exportDb = function(callback, stream, callback) {
+  if (isLocked) return callback(new Error("DB is locked"));
+  
+  async.series([
+    waitForReady,
+    lock,
+    exportDb,
+    unlock
+  ], callback);
 };
 
 
@@ -372,14 +420,16 @@ module.exports.exportDb = function(callback, stream, callback) {
 // Content can be anything accepted by writeFile
 module.exports.updateDoc = function(docName, content, callback) {
   if (isLocked) return callback(new Error("DB is locked"));
-  lock();
 
-  const filename = path.join(dbRootPath, docName);
+  async.series([
+    waitForReady,
+    lock,
+    function(callback) {
+      const filename = path.join(dbRootPath, docName);
 
-  fse.writeFile(filename, content, (err, result) => {
-    unlock();
-    callback(err, results);
-  });
+      fse.writeFile(filename, content, callback);
+    unlock
+  ], callback);
 };
 
 // If doc is json, then apply changes in content and add fields
@@ -393,29 +443,47 @@ module.exports.editJsonDoc = function(docName, content, callback) {
 // Removes the document
 module.exports.deleteDoc = function(docName, callback) {
   if (isLocked) return callback(new Error("DB is locked"));
-  lock();
 
-  const filename = path.join(dbRootPath, docName);
-  fse.remove(filename, (err, result) => {
-    unlock();
-    callback(err, results);
-  });
+  async.series([
+    waitForReady,
+    lock,
+    function(callback) {
+      const filename = path.join(dbRootPath, docName);
+      fse.remove(filename, callback);
+    },
+    unlock
+  ], callback);
 };
 
 // Returns document content
 module.exports.getDoc = function(docName, callback) {
   if (isLocked) return callback(new Error("DB is locked"));
-  lock();
-  
-  const filename = path.join(dbRootPath, docName);
 
-  fse.pathExists(filename, (err, exists) => {
-    if (err) return callback(err);
-    if (!exists) return null;
+  // Make note of this callback since the callback in series is different
+  const externalCallback = callback;
 
-    fse.readFile(filename, (err, result) => {
-      unlock();
-      callback(err, results);
-    });
-  });
+  async.series([
+    waitForReady,
+    lock,
+    function(callback) {
+      // Combine both callbacks so the flow continues
+      // Catches errors on both sides
+      const combinedCallback = (err) => {
+        // Prevent double-callback of external cb when error occurs
+        // since errors are caught and passed to the external cb by async.series
+        if (!err) externalCallback(arguments);
+        callback(arguments);
+      };
+
+      const filename = path.join(dbRootPath, docName);
+
+      fse.pathExists(filename, (err, exists) => {
+        if (err) return combinedCallback(err);
+        if (!exists) return combinedCallback(null, null);
+
+        fse.readFile(filename, combinedCallback);
+      });
+    },
+    unlock
+  ], callback);
 };
