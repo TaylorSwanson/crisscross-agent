@@ -29,6 +29,7 @@ module.exports.removeClient = function(client) {
 // If wait == -1 then it will not time out
 // If wait == 0/undefined/null then it will not wait
 // If wait > 0, the timeout is number of ms to timeout
+// TODO switch wait param with options obj
 module.exports.messagePeer = function(socket, type, payload, wait, callback) {
 
   const packet = packetFactory.newPacket({
@@ -42,13 +43,18 @@ module.exports.messagePeer = function(socket, type, payload, wait, callback) {
   }
 
   // Check for strange occurrences
+  // We have the do/while loop here for retring the packetid
   if (sharedcache.pendingRequests.hasOwnProperty(packetId)) {
-    throw new Error(`Packet id collision (!) : ${packetId}`);
+    console.warn(`Packet id collision (!) : ${packetId}`);
   }
 
-
   // Start sending the packet
-  socket.write(packet, callback);
+  socket.write(packet, function() {
+    // Determine if we wait or not
+    // If not, we're done when the packet is sent
+    if (!(wait === -1 || wait > 0))
+      return callback(...arguments);
+  });
   socket.on("error", err => {
     if (wait > 0 || wait === -1) {
       // Need to remove any handler
@@ -56,17 +62,11 @@ module.exports.messagePeer = function(socket, type, payload, wait, callback) {
     }
     
     return callback(err);
-  });
-  // // IDEA? Count bytes written and callback when the packet length is written
-  // socket.on("drain", callback);
-
-
-
-  // Store timeout ref in case the user has a timeout function
-  let timeoutId;
+  });  
 
   if (wait > 0 || wait === -1) {
     // User specified that the message should await reply
+    let timeoutId;
 
     // This handler will be called on reply or timeout regardless
     // It is also responsible for cleaning up after itself
@@ -75,7 +75,7 @@ module.exports.messagePeer = function(socket, type, payload, wait, callback) {
         clearInterval(timeoutId);
 
         // Callback would receive (err, { header, content, stream });
-        callback(arguments);
+        callback(...arguments);
         // Remove this handler
         delete sharedcache.pendingRequests[packetId];
       }
@@ -83,20 +83,17 @@ module.exports.messagePeer = function(socket, type, payload, wait, callback) {
 
     // Save the pending request
     sharedcache.pendingRequests[packetId] = fnHandler();
-  } else {
-    
-  }
 
-  if (wait > 0) {
-    // User specified that the message should have a timeout
-
-    // Expire the response on timeout
-    // IDEA start timeout when client is fully received?
-    // IDEA https://nodejs.org/api/net.html#net_socket_byteswritten
-    timeoutId = setTimeout(() => {
-      fnHandler(new Error("Reply timed out"));
-    }, wait);
-  }
+    if (wait > 0) {
+      // User specified that the message should have a timeout
+  
+      // Expire the response on timeout
+      // IDEA start timeout when client is fully received?
+      timeoutId = setTimeout(() => {
+        fnHandler(new Error("Reply timed out"));
+      }, wait);
+    }
+  } 
 };
 
 

@@ -37,7 +37,7 @@ const config = require("config");
 const async = require("async");
 const lineReader = require("line-reader");
 
-const md5 = require("md5");
+const md5 = require("../../utils/static/md5");
 
 
 // Where to place db
@@ -472,8 +472,8 @@ module.exports.getDoc = function(docName, callback) {
       const combinedCallback = (err) => {
         // Prevent double-callback of external cb when error occurs
         // since errors are caught and passed to the external cb by async.series
-        if (!err) externalCallback(arguments);
-        callback(arguments);
+        if (!err) externalCallback(...arguments);
+        callback(...arguments);
       };
 
       const filename = path.join(dbRootPath, docName);
