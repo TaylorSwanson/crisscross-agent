@@ -1,7 +1,7 @@
 // Simply responds with a random number
 // Useful for elections?
 
-const packetFactory = require("../utils/static/packetFactory");
+const packetFactory = require("xxp").packetFactory;
 
 module.exports = function({ header, content, stream }) {
   const num = Math.floor(Math.random() * (Number.MAX_SAFE_INTEGER - 1));

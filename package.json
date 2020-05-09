@@ -16,6 +16,7 @@
     "fs-extra": "^9.0.0",
     "line-reader": "^0.4.0",
     "node-ipc": "^9.1.1",
-    "nodegit": "^0.26.5"
+    "nodegit": "^0.26.5",
+    "xxp": "github:TaylorSwanson/xxp#1ebbbe08cdb604de839bf8c39254c0d65d02e939"
   }
 }

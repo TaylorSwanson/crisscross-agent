@@ -10,8 +10,8 @@ const sharedcache = require("../sharedcache");
 const messager = require("../messager");
 const messageHandler = require("../../message-handlers");
 
-const packetDecoder = require("../../utils/static/packetDecoder");
-const packetFactory = require("../../utils/static/packetFactory");
+const packetDecoder = require("xxp").packetDecoder;
+const packetFactory = require("xxp").packetFactory;
 
 let server;
 

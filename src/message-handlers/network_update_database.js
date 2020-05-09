@@ -4,7 +4,7 @@
 const readable = require("stream").Readable;
 
 
-const packetFactory = require("../utils/static/packetFactory");
+const packetFactory = require("xxp").packetFactory;
 const networkDatabase = require("../modules/network-database");
 const ReadableString = require("../utils/static/ReadableString");
 

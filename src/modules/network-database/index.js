@@ -26,7 +26,7 @@
 // DB is essentially a document db but other data should theoretically be able
 // to live within it too
 
-// Locking the db is a manual process, so this should be considered
+// Every db operation is locking
 
 const fse = require("fs-extra");
 const path = require("path");

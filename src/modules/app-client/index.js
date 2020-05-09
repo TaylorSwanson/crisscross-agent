@@ -4,7 +4,7 @@ const net = require("net");
 
 const messager = require("../messager");
 
-const packetDecoder = require("../../utils/static/packetDecoder");
+const packetDecoder = require("xxp").packetDecoder;
 
 
 module.exports.createConnection = function(host, port, callback) {

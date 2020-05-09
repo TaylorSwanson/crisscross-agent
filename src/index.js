@@ -9,7 +9,7 @@ const path = require("path");
 const hostserver = require("./modules/host-server");
 const sharedcache = require("./modules/sharedcache");
 
-const packetFactory = require("./utils/static/packetFactory");
+const packetFactory = require("xxp").packetFactory;
 
 const homedir = os.homedir();
 process.chdir(homedir);

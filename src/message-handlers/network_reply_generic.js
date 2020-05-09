@@ -4,7 +4,7 @@
 
 // This resolves a callback in the messager module
 
-const packetFactory = require("../utils/static/packetFactory");
+const packetFactory = require("xxp").packetFactory;
 const sharedcache = require("../modules/sharedcache");
 
 module.exports = function({ header, content, stream }) {

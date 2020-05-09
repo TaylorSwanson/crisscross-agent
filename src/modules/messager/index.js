@@ -3,7 +3,7 @@
 
 const async = require("async");
 
-const packetFactory = require("../../utils/static/packetFactory");
+const packetFactory = require("xxp").packetFactory;
 const sharedcache = require("../sharedcache");
 
 
