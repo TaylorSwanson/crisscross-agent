@@ -3,6 +3,7 @@
 const net = require("net");
 
 const messager = require("../messager");
+const sharedcache = require("../sharedcache");
 
 const packetDecoder = require("xxp").packetDecoder;
 
@@ -25,7 +26,8 @@ module.exports.createConnection = function(host, port, callback) {
   });
 
   client.on("error", err => {
-    throw err;
+    console.error(err);
+    // throw err;
   });
 
   stream.on("ready", () => {

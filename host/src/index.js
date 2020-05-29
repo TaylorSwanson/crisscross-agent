@@ -22,16 +22,16 @@ try {
 } catch (err) {
   if (err.code === "ENOENT") {
     // TODO log to a more recognizable location
-    console.log("Config file not found at adhoc.json:", configPath);
+    console.log("Config file not found at xx.json:", configPath);
   } else {
     throw err;
   }
 }
 
-// Store the adhoc.json config
+// Store the xx.json config
 const keys = Object.keys(instConfig);
 keys.forEach(key => {
-  sharedcache[key] = instConfig.key;
+  sharedcache[key] = instConfig[key];
 });
 
 // Give this instance a random name for the process (not hostname or actual PID)
@@ -40,12 +40,3 @@ sharedcache["processid"] = crypto.randomBytes(4).toString("hex");
 // Init server setup
 // TODO load server layout with DOAPI
 hostserver.start();
-
-packetFactory.newPacket({
-  header: {
-    type: "internal__connecting_to_you"
-  },
-  content: {
-    yourIp: "asdf"
-  }
-});

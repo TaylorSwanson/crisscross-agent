@@ -25,12 +25,17 @@ module.exports.removeClient = function(client) {
   clientConnections.splice(idx, 1);
 };
 
+// Get list of all connected ip addresses
+module.exports.getAllConnectionAddresses = function() {
+  return clientConnections.map(c => c.address());
+};
+
 // Sends message to a specfic peer
 // If wait == -1 then it will not time out
 // If wait == 0/undefined/null then it will not wait
 // If wait > 0, the timeout is number of ms to timeout
 // TODO switch wait param with options obj
-module.exports.messagePeer = function(socket, type, payload, wait, callback) {
+module.exports.messagePeer = function(socket, type, payload, timeout, callback) {
 
   const packet = packetFactory.newPacket({
     header: { type }, content: payload
@@ -50,13 +55,13 @@ module.exports.messagePeer = function(socket, type, payload, wait, callback) {
 
   // Start sending the packet
   socket.write(packet, function() {
-    // Determine if we wait or not
+    // Determine if we timeout or not
     // If not, we're done when the packet is sent
-    if (!(wait === -1 || wait > 0))
+    if (!(timeout === -1 || timeout > 0))
       return callback(...arguments);
   });
   socket.on("error", err => {
-    if (wait > 0 || wait === -1) {
+    if (timeout > 0 || timeout === -1) {
       // Need to remove any handler
       delete sharedcache.pendingRequests[packetId];
     }
@@ -64,7 +69,7 @@ module.exports.messagePeer = function(socket, type, payload, wait, callback) {
     return callback(err);
   });  
 
-  if (wait > 0 || wait === -1) {
+  if (timeout > 0 || timeout === -1) {
     // User specified that the message should await reply
     let timeoutId;
 
@@ -84,7 +89,7 @@ module.exports.messagePeer = function(socket, type, payload, wait, callback) {
     // Save the pending request
     sharedcache.pendingRequests[packetId] = fnHandler();
 
-    if (wait > 0) {
+    if (timeout > 0) {
       // User specified that the message should have a timeout
   
       // Expire the response on timeout
@@ -101,10 +106,10 @@ module.exports.messagePeer = function(socket, type, payload, wait, callback) {
 // If wait == -1 then it will not time out
 // If wait == 0/undefined/null then it will not wait
 // If wait > 0, the timeout is number of ms to timeout
-module.exports.messageAllPeers = function(type, payload, wait, callback) {
+module.exports.messageAllPeers = function(type, payload, timeout, callback) {
   // Message to send:
   async.each(clientConnections, (client, callback) => {
-    module.exports.messagePeer(client, type, payload, wait, callback);
+    module.exports.messagePeer(client, type, payload, timeout, callback);
   }, callback);
 };
 

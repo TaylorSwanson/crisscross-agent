@@ -1,6 +1,7 @@
 .DS_Store
 node_modules
 /dist
+# /multipass-cache
 
 # local env files
 .env.local
@@ -20,4 +21,7 @@ yarn-error.log*
 *.sln
 *.sw?
 
-cloud_init.yml
+# cloud_init.yml
+
+/mounts
+/dev-cache

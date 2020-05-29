@@ -24,6 +24,8 @@ module.exports.start = function() {
     // This lets the server handle incoming messages with the message handlers
     packetDecoder(socket, messageHandler);
 
+    messenger.addClient(socket);
+
     socket.on("end", () => {
       // Lost connection, looks intentional (FIN packet sent)
       // We should have received a goodbye message so this shouldn't be an issue
@@ -31,8 +33,8 @@ module.exports.start = function() {
 
     socket.on("ready", () => {
       // Store reference to socket
-      const address = socket.address();
-      activeSockets[address.address] = socket;
+      // const address = socket.address();
+      // activeSockets[address.address] = socket;
     });
   });
 
@@ -63,6 +65,8 @@ module.exports.dropClient = function(ip, callback) {
 
   // // Send last message to prevent reconnect, acknowledge
   // socket.end(packet, callback);
+
+  messager.removeClient(socket);
 
   socket.end(null, callback);
 
