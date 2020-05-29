@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# -q flag is completely quiet
-# if [[ "$1" == "-i" ]] ; then
-#   exec >/dev/null 2>&1
-# fi
+# This script is used by the spoof server to pretend to be the DigitalOcean API
+# It is necessary for this file to be in the root of this project
+
+# You can also call this script manually from the command line with no args
 
 
 BASEDIR=$(dirname "$0")
@@ -64,4 +64,7 @@ echo "Copying host code"
 cp -r ./host/* $MOUNTPOINT
 
 echo "Done"
+
+
+# IMPORTANT last line must be the ip address of the server
 echo $NEWIP
