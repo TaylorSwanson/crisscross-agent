@@ -9,7 +9,9 @@ const path = require("path");
 const config = require("config");
 
 const hostserver = require("./modules/host-server");
+const ipchost = require("./modules/ipc-host");
 const sharedcache = require("./modules/sharedcache");
+const serverApi = require("./modules/server-api");
 
 // const packetFactory = require("xxp").packetFactory;
 
@@ -48,3 +50,11 @@ sharedcache["processid"] = crypto.randomBytes(4).toString("hex");
 // Init server setup
 // TODO load server layout with DOAPI
 hostserver.start();
+
+// Start IPC server
+ipchost.start();
+
+
+serverApi.getAllServers("", (err, nodes) => {
+  console.log("Found servers", nodes);
+});

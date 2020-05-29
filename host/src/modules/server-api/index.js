@@ -1,14 +1,17 @@
 // Interface for interacting with the digitalocean API
 
-const child_processs = require("child_processs");
+const child_process = require("child_process");
 const config = require("config");
 
 if (config.has("useMultipass")) {
   module.exports.getAllServers = function(nodename, callback) {
-    child_processs.exec("multipass list --format json", (err, stdout, stderr) => {
+    child_process.exec("multipass list --format json", (err, stdout, stderr) => {
       if (err) return callback(err);
 
-      const servers = JSON.parse(stdout);
+      const servers = JSON.parse(stdout).list.map(s => {
+        s.ipv4 = s.ipv4[0];
+        return s;
+      });
 
       callback(null, servers);
     });
@@ -16,7 +19,7 @@ if (config.has("useMultipass")) {
   return;
 }
 
-const DigitalOceanApi = require("digitalocean");
+const digitalocean = require("digitalocean");
 
 const doClient = digitalocean.client(process.env.DOTOKEN);
 
