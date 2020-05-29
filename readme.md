@@ -63,3 +63,12 @@ it's recommended that this variable be set to the crisscross-example-project
 root. This allows for debugging and also acts as a test platform.
 
 
+# Development usage
+You will need to start a server to spoof the DigitalOcean api. The server is
+found in the `spoof` dir in this project, follow the instructions in its readme.
+
+# Normal usage
+You shouldn't need to use this repo locally if you are using it just for hosting
+your application. The host directory will automatically be loaded onto new nodes
+in the network for your project and the rest will be configured through the
+admin management console.
