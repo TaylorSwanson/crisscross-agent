@@ -5,7 +5,7 @@
 const packetFactory = require("xxp").packetFactory;
 
 const sharedcache = require("../modules/sharedcache");
-const messager = require("../modules/messasger");
+const messager = require("../modules/messager");
 
 module.exports = function({ header, content, stream }) {
   const num = Math.floor(Math.random() * (Number.MAX_SAFE_INTEGER - 1));

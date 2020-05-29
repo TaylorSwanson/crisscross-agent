@@ -2,5 +2,6 @@
   "suffix": "dev",
   "port": 1052,
   "useMultipass": true,
-  "netTimeout": 10000
+  "netTimeout": 10000,
+  "XX_APPDIR": true
 }

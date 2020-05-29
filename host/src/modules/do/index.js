@@ -1,24 +1,30 @@
 // Interface for interacting with the digitalocean API
 
+const child_processs = require("child_processs");
 const config = require("config");
 
 if (config.has("useMultipass")) {
   module.exports.getAllServers = function(nodename, callback) {
+    child_processs.exec("multipass list --format json", (err, stdout, stderr) => {
+      if (err) return callback(err);
 
+      const servers = JSON.parse(stdout);
+
+      callback(null, servers);
+    });
   };
   return;
 }
 
-const DigitalOceanApi = require("digital-ocean-api");
+const DigitalOceanApi = require("digitalocean");
 
-const doApi = new DigitalOceanApi({
-  // TODO get this value from the application somewhere
-  token: process.env.DOTOKEN
-});
+const doClient = digitalocean.client(process.env.DOTOKEN);
 
 module.exports.getAllServers = function(nodename, callback) {
-  doApi.listDroplets((err, droplets) => {
+  doClient.droplets.list((err, droplets) => {
     if (err) return callback(new Error("Couldn't reach DigitalOcean api"));
+
+    console.log("Droplets:", droplets);
 
     if (!nodename || !nodename.trim.length()) return callback(null, droplets);
     nodename = nodename.toLowerCase().trim();

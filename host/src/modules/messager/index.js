@@ -31,9 +31,9 @@ module.exports.getAllConnectionAddresses = function() {
 };
 
 // Sends message to a specfic peer
-// If wait == -1 then it will not time out
-// If wait == 0/undefined/null then it will not wait
-// If wait > 0, the timeout is number of ms to timeout
+// If timeout == -1 then it will not time out
+// If timeout == 0/undefined/null then it will not time out
+// If timeout > 0, the timeout is number of ms
 // TODO switch wait param with options obj
 module.exports.messagePeer = function(socket, type, payload, timeout, callback) {
 

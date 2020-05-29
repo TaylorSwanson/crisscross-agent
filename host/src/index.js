@@ -6,16 +6,24 @@ const os = require("os");
 const crypto = require("crypto");
 const path = require("path");
 
+const config = require("config");
+
 const hostserver = require("./modules/host-server");
 const sharedcache = require("./modules/sharedcache");
 
-const packetFactory = require("xxp").packetFactory;
+// const packetFactory = require("xxp").packetFactory;
 
 const homedir = os.homedir();
 process.chdir(homedir);
 
 // Load the config
-const configPath = path.join(homedir, "application", "xx.json");
+let configPath = path.join(homedir, "application", "xx.json");
+
+// Use specific application directory, useful for dev
+if (config["XX_APPDIR"] && config.XX_APPDIR) {
+  configPath = path.join(process.env.XX_APPDIR, "xx.json");
+}
+
 let instConfig = "";
 try {
   instConfig  = fs.readFileSync(configPath);
