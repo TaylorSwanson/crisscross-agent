@@ -1,0 +1,11 @@
+{
+  "name": "spoof",
+  "version": "1.0.0",
+  "description": "This server needs to be running so multipass instances can communicate with what they think to be the cloud, when in reality this API is using the multipass cli to mimic cloud actions, such as server creation/destruction/listing/etc.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT"
+}

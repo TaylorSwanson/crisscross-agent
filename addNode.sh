@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# -q flag is completely quiet
+# if [[ "$1" == "-i" ]] ; then
+#   exec >/dev/null 2>&1
+# fi
+
+
 BASEDIR=$(dirname "$0")
 
 # Make sure node modules are installed
@@ -58,3 +64,4 @@ echo "Copying host code"
 cp -r ./host/* $MOUNTPOINT
 
 echo "Done"
+echo $NEWIP

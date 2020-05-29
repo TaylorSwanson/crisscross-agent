@@ -56,5 +56,21 @@ ipchost.start();
 
 
 serverApi.getAllServers("", (err, nodes) => {
-  console.log("Found servers", nodes);
+  console.log(`Found ${nodes.length} peer servers`);
+});
+
+serverApi.createServer({}, (err, stdout, stderr) => {
+  console.log("Started a new server at", stdout);
+});
+serverApi.createServer({}, (err, stdout, stderr) => {
+  console.log("Started a new server at", stdout);
+});
+serverApi.createServer({}, (err, stdout, stderr) => {
+  console.log("Started a new server at", stdout);
+});
+serverApi.createServer({}, (err, stdout, stderr) => {
+  console.log("Started a new server at", stdout);
+});
+serverApi.createServer({}, (err, stdout, stderr) => {
+  console.log("Started a new server at", stdout);
 });

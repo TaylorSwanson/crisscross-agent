@@ -1,6 +1,7 @@
 // Interface for interacting with the digitalocean API
 
 const child_process = require("child_process");
+const path = require("path");
 const config = require("config");
 
 if (config.has("useMultipass")) {
@@ -16,6 +17,22 @@ if (config.has("useMultipass")) {
       callback(null, servers);
     });
   };
+
+  module.exports.createServer = function(config, callback) {
+    // Config is normally digitalocean config stuff
+    // We only care about the tag
+    const cwd = path.join(__dirname, "../../../../");
+    child_process.exec(path.join(cwd, "addNode.sh"), {
+      cwd
+    }, (err, stdout, stderr) => {
+      if (err) return callback(err);
+
+      // Last line is the ip of the new server
+      const lines = stdout.trim().split('\n');
+      const ipaddr = lines[lines.length-1].trim();
+      return callback(null, ipaddr);
+    });
+  }
   return;
 }
 
