@@ -23,5 +23,5 @@ yarn-error.log*
 
 # cloud_init.yml
 
-/mounts
+/dev-mounts
 /dev-cache

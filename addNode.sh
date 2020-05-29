@@ -1,10 +1,18 @@
 #!/bin/bash
 
 BASEDIR=$(dirname "$0")
+
+
+if [ ! -d "$BASEDIR/host/node_modules" ]; then
+  echo "Installing node_modules before continuing"
+  $(cd ./host && npm install)
+fi
+
+
 INSTANCENAME=`openssl rand -hex 5`
 INSTANCENAME="n$INSTANCENAME"
 # This is where we will mount the fs of each node
-MOUNTPOINT="$BASEDIR/mounts/$INSTANCENAME"
+MOUNTPOINT="$BASEDIR/dev-mounts/$INSTANCENAME"
 
 CACHEPATH="$BASEDIR/dev-cache/"
 mkdir -p $CACHEPATH
@@ -43,6 +51,7 @@ multipass exec $INSTANCENAME -- rm /home/ubuntu/host/$INSTALLNAME
 multipass exec $INSTANCENAME -- sudo apt-get install -y nodejs
 multipass exec $INSTANCENAME -- sudo npm install -g forever
 
-cp ./* $MOUNTPOINT
+echo "Copying host dir"
+cp -r ./host/* $MOUNTPOINT
 
 echo "Done"
