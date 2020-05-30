@@ -18,7 +18,7 @@ module.exports.getAllServers = function(callback) {
 };
 
 function setTag(nodeName, tag) {
-  const mountDir = path.join(__dirname, "../dev-mounts/", nodeName.toLowerCase);
+  const mountDir = path.join(__dirname, "../dev-mounts/", nodeName.toLowerCase());
   fs.writeFileSync(path.join(mountDir, "tag"), tag);
 }
 
