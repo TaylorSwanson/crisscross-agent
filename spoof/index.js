@@ -2,6 +2,7 @@ const fs = require("fs");
 
 const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
 
 const showdown = require("showdown");
 const mdConverter = new showdown.Converter();
@@ -13,6 +14,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// Configure app to support message bodies with different encodings
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+
 app.get("/servers", (req, res, next) => {
   serverApi.getAllServers(function(err, result) {
     if (err) return res.status(500).send(err);
@@ -22,7 +29,13 @@ app.get("/servers", (req, res, next) => {
 });
 
 app.post("/servers", (req, res, next) => {
-  serverApi.createServer
+  serverApi.createServer({
+    tag: req.body.tag
+  }, (err, result) => {
+    if (err) return res.status(500).send(err);
+
+    res.status(201).json(result);
+  });
 });
 
 app.get("/", (req, res, next) => {

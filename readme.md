@@ -1,8 +1,19 @@
-# XX Agent
+# CrissCross Agent
 The CrissCross agent is the host of the application that the user wants to run,
 aka the "guest" program.
 
-## Philosophy
+## Normal usage
+You shouldn't need to use this repo locally if you are using it just for hosting
+your application. The host directory will automatically be loaded onto new nodes
+in the network for your project and the rest will be configured through the
+admin management console.
+
+## Development usage
+You will need to start a server to spoof the DigitalOcean api. The server is
+found in the `spoof` dir in this project, follow the instructions in its readme.
+
+
+# Philosophy
 The agent is supposed to be lightweight and communicates with other agents over
 a shared network. There are plans to make this communication work over TLS.
 
@@ -46,7 +57,7 @@ git repo, which can be configured in the settings dashboard. This lets the
 config files stay with the guest application, and allows the guest to update
 based on the git version.
 
-## Prerequisites
+# Development prerequisites
 
 * `Multipass`: used to spoof DigitalOcean droplets for local development.
 * `NodeJS`: Built using v14.
@@ -55,20 +66,18 @@ based on the git version.
 * The `crisscross-example-project` for development is a helpful tool to monitor
 network activity and runs as if it were a production app.
 
-## Env variables
+### Env variables
 These variables are used/necessary for development:
 
 * `XX_APPDIR`: used to specify where to look for the application root. In dev,
-it's recommended that this variable be set to the crisscross-example-project
-root. This allows for debugging and also acts as a test platform.
+it's recommended that this variable be set to the `crisscross-example-project`
+directory. This allows for debugging and also acts as a test platform.
 
+# Example/debug project
+This is an app designed to run on the cluster in development, it will give you
+insights into how the network is functioning and will let you test a few of its
+features. Clone it to somewhere in your dev environment and point the
+`XX_APPDIR` env variable to the directory; see above.
 
-# Development usage
-You will need to start a server to spoof the DigitalOcean api. The server is
-found in the `spoof` dir in this project, follow the instructions in its readme.
-
-# Normal usage
-You shouldn't need to use this repo locally if you are using it just for hosting
-your application. The host directory will automatically be loaded onto new nodes
-in the network for your project and the rest will be configured through the
-admin management console.
+See the `crisscross-example-project` repo here:
+https://github.com/TaylorSwanson/crisscross-example-project

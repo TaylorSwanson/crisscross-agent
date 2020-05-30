@@ -1,4 +1,4 @@
-# DigitalOcean API spoof
+# Server API spoof
 This server needs to be running so multipass instances can communicate with what
 they think to be the cloud, when in reality this API is using the multipass cli
 to mimic cloud actions, such as server creation/destruction/listing/etc.
@@ -27,7 +27,7 @@ this long request is a cheap way of doing this without implementing some sort of
 
 * `GET /servers`: List all servers in the cluster
 
-* `GET /`: You may be here, show this .md file
+* `GET /`: Show the readme file
 
 ## Attributes
 Since we don't have the full DigitalOcean api to store tag names, we need to

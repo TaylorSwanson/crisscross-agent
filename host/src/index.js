@@ -5,6 +5,7 @@ const fs = require("fs");
 const os = require("os");
 const crypto = require("crypto");
 const path = require("path");
+const child_process = require("child_process");
 
 const config = require("config");
 
@@ -22,7 +23,7 @@ process.chdir(homedir);
 let configPath = path.join(homedir, "application", "xx.json");
 
 // Use specific application directory, useful for dev
-if (config["XX_APPDIR"] && config.XX_APPDIR) {
+if (config["XX_APPDIR"] && config.XX_APPDIR.length) {
   configPath = path.join(process.env.XX_APPDIR, "xx.json");
 }
 
@@ -54,23 +55,11 @@ hostserver.start();
 // Start IPC server
 ipchost.start();
 
-
 serverApi.getAllServers("", (err, nodes) => {
-  console.log(`Found ${nodes.length} peer servers`);
+  console.log(`Found ${nodes.length} peer servers:`);
+  console.log(nodes);
 });
 
-serverApi.createServer({}, (err, stdout, stderr) => {
-  console.log("Started a new server at", stdout);
-});
-serverApi.createServer({}, (err, stdout, stderr) => {
-  console.log("Started a new server at", stdout);
-});
-serverApi.createServer({}, (err, stdout, stderr) => {
-  console.log("Started a new server at", stdout);
-});
-serverApi.createServer({}, (err, stdout, stderr) => {
-  console.log("Started a new server at", stdout);
-});
-serverApi.createServer({}, (err, stdout, stderr) => {
-  console.log("Started a new server at", stdout);
+serverApi.createServer({ tag: "app" }, (err, result) => {
+  console.log("Started a new server: ", result);
 });

@@ -58,7 +58,6 @@ multipass exec $INSTANCENAME -- sudo chmod +x /home/ubuntu/host/$INSTALLNAME
 multipass exec $INSTANCENAME -- sudo /home/ubuntu/host/$INSTALLNAME
 multipass exec $INSTANCENAME -- rm /home/ubuntu/host/$INSTALLNAME
 multipass exec $INSTANCENAME -- sudo apt-get install -y nodejs
-multipass exec $INSTANCENAME -- sudo npm install -g forever
 
 echo "Copying host code"
 cp -r ./host/* $MOUNTPOINT
@@ -67,4 +66,4 @@ echo "Done"
 
 
 # IMPORTANT last line must be the ip address of the server
-echo $NEWIP
+echo $NEWIP $INSTANCENAME
