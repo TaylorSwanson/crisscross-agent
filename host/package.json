@@ -14,8 +14,9 @@
     "config": "^3.3.1",
     "digitalocean": "^1.2.1",
     "fs-extra": "^9.0.0",
+    "koa": "^2.12.0",
+    "koa-router": "^9.0.1",
     "line-reader": "^0.4.0",
-    "node-ipc": "^9.1.1",
     "nodegit": "^0.26.5",
     "xxp": "github:TaylorSwanson/xxp#1ebbbe08cdb604de839bf8c39254c0d65d02e939"
   }

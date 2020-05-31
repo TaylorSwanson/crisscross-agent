@@ -6,11 +6,19 @@ const async = require("async");
 const packetFactory = require("xxp").packetFactory;
 const sharedcache = require("../sharedcache");
 
-
-const clientConnections = [];
+sharedcache.clientConnections = [];
+const clientConnections = sharedcache.clientConnections;
 
 // Add a client stream, doesn't matter if it's a server or a client stream
 module.exports.addClient = function(client) {
+  // Client should be an object with this signature:
+  /*
+  {
+    socket,
+    name
+  }
+  */
+
   clientConnections.push(client);
 };
 module.exports.removeClient = function(client) {
@@ -27,7 +35,7 @@ module.exports.removeClient = function(client) {
 
 // Get list of all connected ip addresses
 module.exports.getAllConnectionAddresses = function() {
-  return clientConnections.map(c => c.address());
+  return clientConnections.map(c => c.socket.address());
 };
 
 // Sends message to a specfic peer
@@ -109,7 +117,7 @@ module.exports.messagePeer = function(socket, type, payload, timeout, callback) 
 module.exports.messageAllPeers = function(type, payload, timeout, callback) {
   // Message to send:
   async.each(clientConnections, (client, callback) => {
-    module.exports.messagePeer(client, type, payload, timeout, callback);
+    module.exports.messagePeer(client.socket, type, payload, timeout, callback);
   }, callback);
 };
 

@@ -15,3 +15,9 @@ all.
 * The `tag` file in the host directory is the default tag of the server which is
 used in development. The tag is replaced in the nodes when the test application
 is launched. Otherwise, the tag comes from the native DigitalOcean tags API.
+
+
+# Guest application endpoints
+The guest application needs to be able to communicate with the host application.
+
+These HTTP endpoints facilitate this communcation locally
