@@ -3,6 +3,7 @@
 
 const ipc = require("node-ipc");
 ipc.config.rawBuffer = false;
+ipc.config.id = "crisscross";
 
 module.exports.start = function() {
   ipc.serve(() => {

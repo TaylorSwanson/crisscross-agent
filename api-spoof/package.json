@@ -4,11 +4,13 @@
   "description": "While developing applications to run on the cloud, you need to be able to use the API that CrissCross makes available to you, but you also need to be able to run your local servers.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./index.js"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "node-ipc": "^9.1.1"
+    "koa": "^2.12.0",
+    "koa-router": "^9.0.1"
   }
 }
