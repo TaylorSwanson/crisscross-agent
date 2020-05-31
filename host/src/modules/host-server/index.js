@@ -3,6 +3,7 @@
 // client to older peers
 
 const net = require("net");
+const os = require("os");
 
 const config = require("config");
 
@@ -18,13 +19,14 @@ let server;
 const activeSockets = {};
 
 const port = config.get("port");
+const hostname = os.hostname().trim().toLowerCase();
 
 module.exports.start = function() {
   server = net.createServer(socket => {
     // This lets the server handle incoming messages with the message handlers
     packetDecoder(socket, messageHandler);
 
-    messenger.addClient(socket);
+    messager.addClient(socket);
 
     socket.on("end", () => {
       // Lost connection, looks intentional (FIN packet sent)
@@ -32,9 +34,14 @@ module.exports.start = function() {
     });
 
     socket.on("ready", () => {
+      console.log(`${hostname} - Host server ready`);
       // Store reference to socket
       // const address = socket.address();
       // activeSockets[address.address] = socket;
+    });
+
+    socket.on("connection", socket => {
+      console.log(`${hostname} - Socket connected`);
     });
   });
 

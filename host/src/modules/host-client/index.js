@@ -1,38 +1,45 @@
 // This module helps communicate with the peers by connecting to their servers
 
 const net = require("net");
+const os = require("os");
 
 const messager = require("../messager");
 const sharedcache = require("../sharedcache");
 
 const packetDecoder = require("xxp").packetDecoder;
 
+const hostname = os.hostname().trim().toLowerCase();
 
-module.exports.createConnection = function(host, port, callback) {
+module.exports.connectTo = function(host, port, callback) {
   // Connect to a remote server
-  const client = net.createConnection(port, host, () => {
-    console.log(`Connected to ${host}:${port}`);
-    messager.addClient(client);
-    callback(client);
+  const socket = net.createConnection(port, host, () => {
+    console.log(`${hostname} - Connected to ${host}:${port}`);
+    messager.addClient(socket);
+    callback(socket);
   });
 
-  packetDecoder(client);
+  packetDecoder(socket);
 
-  client.on("end", () => {
-    console.log(`Disconnected from ${host}:${port}`);
+  socket.on("end", () => {
+    console.log(`${hostname} - Disconnected from ${host}:${port}`);
     // Lost connection, looks intentional (FIN packet sent)
     // We should have received a goodbye message so this shouldn't be an issue
     // TODO verify that we know it's gone
   });
 
-  client.on("error", err => {
-    console.error(err);
+  socket.on("error", err => {
+    console.log(err);
     // throw err;
   });
 
-  stream.on("ready", () => {
+  socket.on("ready", () => {
+    console.log(`${hostname} - Ready on ${host}:${port}`);
     // messager.messagePeers({
       
     // });
+  });
+
+  socket.on("timeout", () => {
+    console.log(`${hostname} - Timeout on ${host}:${port}`);
   });
 };
