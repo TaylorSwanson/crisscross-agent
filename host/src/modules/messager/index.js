@@ -24,7 +24,7 @@ module.exports.addClient = function(client) {
 module.exports.removeClient = function(client) {
   const idx = clientConnections.indexOf(client);
   if (idx === -1) {
-    return console.log("Cannot remove non-existing client:", client);
+    return console.log("Cannot remove non-existing client:", client.name);
   }
 
   // Remove client

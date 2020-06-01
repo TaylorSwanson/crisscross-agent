@@ -3,10 +3,12 @@
 const net = require("net");
 const os = require("os");
 
-const messager = require("../messager");
 const sharedcache = require("../sharedcache");
+const messager = require("../messager");
+const messageHandler = require("../../message-handlers");
 
 const packetDecoder = require("xxp").packetDecoder;
+const packetFactory = require("xxp").packetFactory;
 
 const hostname = os.hostname().trim().toLowerCase();
 
@@ -24,35 +26,38 @@ module.exports.connectTo = function(host, port, callback) {
   });
 
   connection.on("error", err => {
+    if (err.code == "ECONNREFUSED") {
+      return console.log(`${hostname} - Not available as host: ${host}:${port}`);
+    }
     console.log(`${hostname} - Error on ${host}:${port}`, err);
-    // throw err;
   });
 
   connection.on("ready", () => {
     console.log(`${hostname} - Ready to talk to ${host}:${port}`);
+
+    const packet = packetFactory.newPacket({
+      header: {
+        type: "network_handshake_identify"
+      },
+      content: {
+        name: hostname
+      }
+    }).packet;
     
-    connection.write(JSON.stringify({
-      name: hostname
-    }), () => {
+    connection.write(packet, () => {
       console.log(`${hostname} - Identified to ${host}:${port} as ${hostname}`);
       // We've identified ourselves, wait for an accepted reply
     });
   });
 
-  // This is where the server lets us know if we've been accepted
-  let currentBuffer = Buffer.allocUnsafe(0);
-  connection.on("data", data => {
-    // Build up message
-    currentBuffer = Buffer.concat([currentBuffer, data]);
 
-    let message = currentBuffer.toString("utf8");
-    
-    message = JSON.parse(message);
-    
+  // This is where the server lets us know if we've been accepted
+  packetDecoder(connection, res => {
+    const message = JSON.parse(res.content);
     if (message.status == "accepted") {
-      console.log(`${hostname} - server at ${connection.address()} replied: ${message.status}`);
+      console.log(`${hostname} - server at ${connection.address().address} replied: ${message.status}`);
       // This lets the server handle incoming messages with the message handlers
-      packetDecoder(connection);
+      packetDecoder(connection, messageHandler);
 
       messager.addClient({
         socket: connection,
@@ -62,7 +67,7 @@ module.exports.connectTo = function(host, port, callback) {
       return;
     }
     
-    console.log(`${hostname} - server at ${connection.address()} rejected us: ${message}`);
+    console.log(`${hostname} - server at ${connection.address().address} rejected us: ${message}, ${typeof message}`);
   });
 
   connection.on("timeout", () => {

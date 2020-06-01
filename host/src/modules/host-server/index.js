@@ -27,60 +27,58 @@ module.exports.start = function() {
   server = net.createServer(socket => {
 
     console.log(`${hostname} - client just connected`);
-
-    socket.on("ready", () => {
       
-      const connection = socket;
+    const connection = socket;
 
-      console.log(`${hostname} - client at ${connection.address()} connected, \
-      waiting for identification`);
+    console.log(`${hostname} - client at ${connection.address().address} connected, \
+waiting for identification`);
 
-      // This is where the client identifies themselves
-      let currentBuffer = Buffer.allocUnsafe(0);
-      connection.on("data", data => {
-        console.log("Data", data);
-        // Build up message
-        currentBuffer = Buffer.concat([currentBuffer, data]);
+    packetDecoder(connection, res => {
+      let message = res.content;
 
-        let message = currentBuffer.toString("utf8");
-        console.log(`${hostname} - client at ${connection.address()} identified \
-        as ${message}`);
+      message = JSON.parse(message);
+      console.log(`${hostname} - client at ${connection.address().address} identified \
+as ${message.name}`);
 
-        message = JSON.parse(message);
 
-        // This lets the server handle incoming messages with the message handlers
-        packetDecoder(connection, messageHandler);
+      // This lets the server handle incoming messages with the message handlers
+      packetDecoder(connection, messageHandler);
 
-        messager.addClient({
-          socket: connection,
-          name: message.name
-        });
-        
-        // Let client know that we are accepting messages now
-        connection.write(JSON.stringify({
+      messager.addClient({
+        socket: connection,
+        name: message.name
+      });
+
+      const packet = packetFactory.newPacket({
+        header: {
+          type: "network_handshake_status"
+        },
+        content: {
           status: "accepted"
-        }), () => {
-          console.log(`${hostname} - client at ${connection.address()} accepted`);
-        });
-
-      });
+        }
+      }).packet;
       
-      // Client dropped out
-      connection.on("end", () => {
-        console.log(`${hostname} - client at ${connection.address()} ended connection`);
-
-        messager.removeClient(connection);
-        socket.end(null, callback);
+      // Let client know that we are accepting messages now
+      connection.write(packet, () => {
+        console.log(`${hostname} - client at ${connection.address().address} is accepted`);
       });
     });
+    
+    // Client dropped out
+    connection.on("end", () => {
+      console.log(`${hostname} - client at ${connection.address().address} ended connection`);
 
-    socket.on("end", () => {
-      console.log(`${hostname} - we ended the server connection?`);
-    });
+      messager.removeClient({
+        socket: connection,
+        name: null
+      });
 
-    socket.on("connect", connection => {
-      
+      socket.end(null);
     });
+  });
+
+  server.on("end", () => {
+    console.log(`${hostname} - we ended the server connection?`);
   });
 
   server.on("error", err => {
