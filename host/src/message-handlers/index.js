@@ -35,6 +35,13 @@ if (Object.getOwnPropertyNames(handlers).length === 0)
 // Call workerHandlers() with payload and the master can send info to workers
 // { header, content, stream }
 module.exports = function(payload) {
+  try {
+    payload.header = JSON.parse(payload.header);
+  } catch (e) {};
+  try {
+    payload.content = JSON.parse(payload.content);
+  } catch (e) {};
+
   // Problems
   if (!payload.content)
     return console.error({ payload }, "No payload content sent to handler");
@@ -42,20 +49,14 @@ module.exports = function(payload) {
     return console.error({ payload }, "No payload header sent to handler");
   if (!payload.stream)
     return console.error({ payload }, "No payload stream sent to handler");
-  if (!payload.header.hasOwnProperty(type))
+  if (!payload.header.hasOwnProperty("type"))
     return console.error({ payload }, "Payload header has no message type");
   if (!handlers.hasOwnProperty(payload.header.type))
     return console.error({ payload }, "No handler defined for message type");
 
-  // Parse
-  payload.header = JSON.parse(payload.header);
-  payload.content = JSON.parse(payload.content);
-
   // We'll need to reply to the worker with the result of this event
   return handlers[payload.header.type](payload, (err, results) => {
     if (err) return console.error({ err, results }, "Error in worker handler");
-
-    payload.results = results;
-    worker.send(payload);
+    //
   });
 };

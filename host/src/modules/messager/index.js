@@ -6,8 +6,9 @@ const async = require("async");
 const packetFactory = require("xxp").packetFactory;
 const sharedcache = require("../sharedcache");
 
-sharedcache.clientConnections = [];
-const clientConnections = sharedcache.clientConnections;
+// sharedcache.clientConnections = [];
+// const clientConnections = sharedcache.clientConnections;
+const clientConnections = [];
 
 // Add a client stream, doesn't matter if it's a server or a client stream
 module.exports.addClient = function(client) {
@@ -19,10 +20,14 @@ module.exports.addClient = function(client) {
   }
   */
 
+  if (clientConnections.some(c => c.name === client.name)) {
+    return console.warn("Client was already added to the messager:", client.name);
+  }
+
   clientConnections.push(client);
 };
 module.exports.removeClient = function(client) {
-  const idx = clientConnections.indexOf(client);
+  const idx = clientConnections.findIndex(c => c.name == client.name);
   if (idx === -1) {
     return console.log("Cannot remove non-existing client:", client.name);
   }
@@ -34,8 +39,11 @@ module.exports.removeClient = function(client) {
 };
 
 // Get list of all connected ip addresses
-module.exports.getAllConnectionAddresses = function() {
-  return clientConnections.map(c => c.socket.address());
+module.exports.getAllClientAddresses = function() {
+  return clientConnections.map(c => ({
+    address: c.socket.address().address,
+    name: c.name
+  }));
 };
 
 // Sends message to a specfic peer
@@ -56,13 +64,12 @@ module.exports.messagePeer = function(socket, type, payload, timeout, callback) 
   }
 
   // Check for strange occurrences
-  // We have the do/while loop here for retring the packetid
   if (sharedcache.pendingRequests.hasOwnProperty(packetId)) {
     console.warn(`Packet id collision (!) : ${packetId}`);
   }
 
   // Start sending the packet
-  socket.write(packet, function() {
+  socket.write(packet.packet, function() {
     // Determine if we timeout or not
     // If not, we're done when the packet is sent
     if (!(timeout === -1 || timeout > 0))
@@ -89,13 +96,13 @@ module.exports.messagePeer = function(socket, type, payload, timeout, callback) 
 
         // Callback would receive (err, { header, content, stream });
         callback(...arguments);
-        // Remove this handler
+        // Remove this handler to prevent duplicate callbacks
         delete sharedcache.pendingRequests[packetId];
       }
     })();
 
     // Save the pending request
-    sharedcache.pendingRequests[packetId] = fnHandler();
+    sharedcache.pendingRequests[packetId] = fnHandler;
 
     if (timeout > 0) {
       // User specified that the message should have a timeout
@@ -103,8 +110,9 @@ module.exports.messagePeer = function(socket, type, payload, timeout, callback) 
       // Expire the response on timeout
       // IDEA start timeout when client is fully received?
       timeoutId = setTimeout(() => {
+        // "timed out" must be in the error message
         fnHandler(new Error("Reply timed out"));
-      }, wait);
+      }, timeout);
     }
   } 
 };
@@ -121,3 +129,6 @@ module.exports.messageAllPeers = function(type, payload, timeout, callback) {
   }, callback);
 };
 
+module.exports.askAllPeers = function(type, payload, timeout, callback) {
+
+};

@@ -11,8 +11,11 @@ const config = require("config");
 
 const hostserver = require("./modules/host-server");
 const hostclient = require("./modules/host-client");
+const guesthost = require("./modules/guest-host");
 const sharedcache = require("./modules/sharedcache");
 const serverApi = require("./modules/server-api");
+const aliveWatcher = require("./modules/alive-watcher");
+const groupTimer = require("./modules/group-timer");
 
 // const packetFactory = require("xxp").packetFactory;
 
@@ -68,6 +71,8 @@ serverApi.getAllServers("", (err, nodes) => {
   });
 });
 
-// serverApi.createServer({ tag: "app" }, (err, result) => {
-//   console.log("Started a new server: ", result);
-// });
+
+// Start the host that the guest application can connect to
+guesthost.start();
+// Start keepalive watcher
+groupTimer.randomTimer("alive", 60, 10, aliveWatcher);

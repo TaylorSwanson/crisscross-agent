@@ -25,44 +25,14 @@ module.exports.start = function() {
   console.log("Starting host server", hostname);
 
   server = net.createServer(socket => {
-
-    console.log(`${hostname} - client just connected`);
       
     const connection = socket;
 
     console.log(`${hostname} - client at ${connection.address().address} connected, \
 waiting for identification`);
 
-    packetDecoder(connection, res => {
-      let message = res.content;
-
-      message = JSON.parse(message);
-      console.log(`${hostname} - client at ${connection.address().address} identified \
-as ${message.name}`);
-
-
-      // This lets the server handle incoming messages with the message handlers
-      packetDecoder(connection, messageHandler);
-
-      messager.addClient({
-        socket: connection,
-        name: message.name
-      });
-
-      const packet = packetFactory.newPacket({
-        header: {
-          type: "network_handshake_status"
-        },
-        content: {
-          status: "accepted"
-        }
-      }).packet;
-      
-      // Let client know that we are accepting messages now
-      connection.write(packet, () => {
-        console.log(`${hostname} - client at ${connection.address().address} is accepted`);
-      });
-    });
+    // This lets the server handle incoming messages with the message handlers
+    packetDecoder(connection, messageHandler);
     
     // Client dropped out
     connection.on("end", () => {
@@ -78,7 +48,7 @@ as ${message.name}`);
   });
 
   server.on("end", () => {
-    console.log(`${hostname} - we ended the server connection?`);
+    console.log(`${hostname} - server ended`);
   });
 
   server.on("error", err => {
@@ -86,7 +56,7 @@ as ${message.name}`);
   });
 
   server.listen(port, () => {
-    console.log(`Server bound to ${port}`);
+    console.log(`${hostname} - Server bound to`, port);
   });
 };
 

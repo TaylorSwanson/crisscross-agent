@@ -50,4 +50,4 @@ const server = app.listen(3334);
 // 10 minute timeout
 server.setTimeout(1000 * 60 * 10);
 
-console.log("Spoof server listening on port", 3334);
+console.log("Cloud API spoof server listening on port", 3334);

@@ -1,45 +1,56 @@
 // We communicate network details to the guest application through this
 // interface
 
-const Koa = require("koa");
-const Router = require("koa-router");
+const express = require("express");
+const bodyParser = require("body-parser");
+const config = require("config");
 
-const app = new Koa();
-const router = new Router();
+const app = express();
 
-const sharedcache = require("../sharedcache");
+// const sharedcache = require("../sharedcache");
+const messager = require("../messager");
 
 // This port needs to be the same as the port that is used in api-spoof
-const port = 5001;
+const port = config.get("internalPort");
+
+// Configure app to support message bodies with different encodings
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 // Log requests
-app.use(async (ctx, next) => {
-  await next();
-  console.log(`${Date.now()}: ${ctx.method} ${ctx.url}`);
+app.use((req, res, next) => {
+  console.log(`${Date.now()}: ${req.method} ${req.url}`);
+  next();
 });
 
 // Default info route
-router.get("/", async ctx => {
-  ctx.status = 200;
-  ctx.body = "Guest API is working, call this API using your application"
+app.get("/", (req, res, next) => {
+  res.status(200).send("Guest API is working, call this API from your application");
 });
 
 // List servers in network
-router.get("/servers/:name?", async (ctx, next) => {
-  if (ctx.params.name) {
-    const name = ctx.params.name.trim().toLowerCase();
-    const serers = ??.filter(s => s.name.trim().toLowerCase() == name);
-    ctx.status = 200;
-    ctx.body = spoof
-  } else {
-    ctx.status = 200;
-    ctx.body = spoof;
+// This doesn't query the network but uses the server's active connection list
+app.get("/servers/:name?", (req, res, next) => {
+  let name = "";
+
+  if (req.params.name) {
+    name = req.params.name.trim().toLowerCase();
   }
+
+  let servers = messager.getAllClientAddresses();
+  if (name.length) {
+    servers = servers.filter(s => s.name === name);
+  }
+
+  res.status(200).json(servers);
 });
 
-router.get("/")
+// TODO request to force server listing?
 
-app.use(router.routes());
-app.listen(port);
-
-console.log("CrissCross guest API running on port", port);
+module.exports.start = function() {
+  const server = app.listen(port);
+  
+  console.log("CrissCross guest API running on port", port);
+};

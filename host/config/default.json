@@ -1,6 +1,7 @@
 {
   "suffix": "dev",
   "port": 1052,
+  "internalPort": 15001,
   "useMultipass": true,
   "netTimeout": 10000,
   "XX_APPDIR": true
