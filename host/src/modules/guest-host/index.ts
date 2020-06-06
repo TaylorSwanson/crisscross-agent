@@ -39,7 +39,7 @@ app.get("/servers/:name?", (req, res, next) => {
     name = req.params.name.trim().toLowerCase();
   }
 
-  let servers = messager.getAllClientAddresses();
+  let servers = messager.getAllConnectionAddresses();
   if (name.length) {
     servers = servers.filter(s => s.name === name);
   }

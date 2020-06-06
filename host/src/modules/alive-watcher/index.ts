@@ -5,15 +5,15 @@
 
 import os from "os";
 
-import messager from "../messager";
+import * as messager from "../messager";
 // import groupTimer from "../group-timer";
 
 const hostname = os.hostname().trim().toLowerCase();
 
-module.exports = function keepAliveFunction() {
-  console.log(`${hostname} - Asking peers if they are alive`);
+export function keepAliveFunction() {
+  console.log(`${hostname} - Asking peers if they are available`);
 
-  messager.messageAllPeers("network_ask_alive", {}, 1000, (err, socket) => {
+  messager.messageAllPeers("network_ask_alive", {}, 1000, (err: Error, socket: NodeJS.Socket) => {
     if (err && err.message.includes("timed out")) {
       // There was a timeout, someone isn't responding
       // That node should be restarted

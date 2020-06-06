@@ -14,15 +14,13 @@ const hostname = os.hostname().trim().toLowerCase();
 // const clientConnections = sharedcache.clientConnections;
 const clientConnections = [];
 
+interface ClientDefinition {
+  socket: NodeJS.Socket,
+  name: string
+};
+
 // Add a client stream, doesn't matter if it's a server or a client stream
-export function addClient(client) {
-  // Client should be an object with this signature:
-  /*
-  {
-    socket,
-    name
-  }
-  */
+export function addClient(client: ClientDefinition): void {
 
   if (clientConnections.some(c => c.name === client.name)) {
     return console.warn("Client was already added to the messager:", client.name);
@@ -32,7 +30,7 @@ export function addClient(client) {
 
   clientConnections.push(client);
 };
-export function removeClient(client) {
+export function removeClient(client: ClientDefinition): void {
   if (typeof client === "undefined") {
     // TODO determine who dropped out
     return console.warn("Cannot remove undefined client");
@@ -48,8 +46,12 @@ export function removeClient(client) {
   clientConnections.splice(idx, 1);
 };
 
+export function removeClientByName(clientName: string) {
+  // TODO
+};
+
 // Get list of all connected ip addresses
-export function getAllClientAddresses() {
+export function getAllConnectionAddresses() {
   return clientConnections.map(c => ({
     address: c.socket.address().address,
     name: c.name
@@ -133,6 +135,7 @@ export function messagePeer(socket, type, payload, timeout, callback) {
 // If wait == 0/undefined/null then it will not wait
 // If wait > 0, the timeout is number of ms to timeout
 export function messageAllPeers(type, payload, timeout, callback) {
+  console.log("Messaging all peers:", payload, clientConnections);
   // Message to send:
   async.each(clientConnections, (client, callback) => {
     module.exports.messagePeer(client.socket, type, payload, timeout, callback);

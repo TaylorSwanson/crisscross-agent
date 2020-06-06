@@ -4,8 +4,14 @@
 
 // This resolves a callback in the messager module
 
-const packetFactory = require("xxp").packetFactory;
-const sharedcache = require("../modules/sharedcache");
+import os from "os";
+
+// import * as xxp from "xxp";
+// import * as messager from "../modules/messager"; 
+import sharedcache from "../modules/sharedcache"; 
+
+const hostname = os.hostname().trim().toLowerCase();
+
 
 module.exports = function({ header, content, socket }) {
 

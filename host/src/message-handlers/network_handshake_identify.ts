@@ -4,13 +4,14 @@
 
 // This resolves a callback in the messager module
 
-const packetFactory = require("xxp").packetFactory;
-// const sharedcache = require("../modules/sharedcache");
-const messager = require("../modules/messager");
+import os from "os";
 
-const hostname = require("os").hostname().trim().toLowerCase();
+import * as xxp from "xxp";
+import * as messager from "../modules/messager"; 
 
-module.exports = function({ header, content, socket }) {
+const hostname = os.hostname().trim().toLowerCase();
+
+export default function({ header, content, socket }) {
 
   console.log(`${hostname} - client at ${socket.address().address} identified \
 as ${content.name}`);
@@ -20,7 +21,7 @@ as ${content.name}`);
     name: content.name
   });
 
-  const packet = packetFactory.newPacket({
+  const packet = xxp.newPacket({
     header: {
       type: "network_handshake_status"
     },

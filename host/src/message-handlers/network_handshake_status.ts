@@ -1,11 +1,12 @@
 // Determines if we've been accepted or not
 // If not, we should disconnect
 
-const packetFactory = require("xxp").packetFactory;
-// const sharedcache = require("../modules/sharedcache");
-const messager = require("../modules/messager");
+import os from "os";
 
-const hostname = require("os").hostname().trim().toLowerCase();
+import * as xxp from "xxp";
+import * as messager from "../modules/messager"; 
+
+const hostname = os.hostname().trim().toLowerCase();
 
 module.exports = function({ header, content, socket }) {
 

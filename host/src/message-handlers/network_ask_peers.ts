@@ -1,23 +1,24 @@
 // Someone is asking for a new list of peers
-// If there are no other peers return [], the other peer already knows about
-// this server if they've contacted us
-
-import packetFactory from "xxp";
 
 // import sharedcache from "../modules/sharedcache";
 
-const messager = require("../modules/messager");
+import os from "os";
 
-module.exports = function({ header, content, socket }) {
+import * as xxp from "xxp";
+import * as messager from "../modules/messager"; 
 
-  const packet = packetFactory.newPacket({
+const hostname = os.hostname().trim().toLowerCase();
+
+export default function({ header, content, socket }) {
+
+  const packet = xxp.newPacket({
     header: {
       type: "network_reply_generic",
       "xxp__responseto": header["xxp__packetid"]
     },
     content: {
       // peers: sharedcache["peers"] || [],
-      all: messager.getAllConnetionAddresses()
+      all: messager.getAllConnectionAddresses()
     }
   }).packet;
   
