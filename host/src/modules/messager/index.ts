@@ -1,19 +1,21 @@
 // Handles communication with other nodes over TCP
 // This works both ways, sending messages to client peers and server peers
 
-const async = require("async");
+import os from "os";
 
-const packetFactory = require("xxp").packetFactory;
-const sharedcache = require("../sharedcache");
+import async from "async";
 
-const hostname = require("os").hostname().trim().toLowerCase();
+import packetFactory from "xxp";
+import sharedcache from "../sharedcache";
+
+const hostname = os.hostname().trim().toLowerCase();
 
 // sharedcache.clientConnections = [];
 // const clientConnections = sharedcache.clientConnections;
 const clientConnections = [];
 
 // Add a client stream, doesn't matter if it's a server or a client stream
-module.exports.addClient = function(client) {
+export function addClient(client) {
   // Client should be an object with this signature:
   /*
   {
@@ -30,7 +32,7 @@ module.exports.addClient = function(client) {
 
   clientConnections.push(client);
 };
-module.exports.removeClient = function(client) {
+export function removeClient(client) {
   if (typeof client === "undefined") {
     // TODO determine who dropped out
     return console.warn("Cannot remove undefined client");
@@ -47,7 +49,7 @@ module.exports.removeClient = function(client) {
 };
 
 // Get list of all connected ip addresses
-module.exports.getAllClientAddresses = function() {
+export function getAllClientAddresses() {
   return clientConnections.map(c => ({
     address: c.socket.address().address,
     name: c.name
@@ -59,7 +61,7 @@ module.exports.getAllClientAddresses = function() {
 // If timeout == 0/undefined/null then it will not time out
 // If timeout > 0, the timeout is number of ms
 // TODO switch wait param with options obj
-module.exports.messagePeer = function(socket, type, payload, timeout, callback) {
+export function messagePeer(socket, type, payload, timeout, callback) {
 
   const packet = packetFactory.newPacket({
     header: { type }, content: payload
@@ -99,10 +101,10 @@ module.exports.messagePeer = function(socket, type, payload, timeout, callback) 
     // This handler will be called on reply or timeout regardless
     // It is also responsible for cleaning up after itself
     const fnHandler = (function() {
-      return function() {
+      return function(err?: Error) {
         clearInterval(timeoutId);
 
-        // Callback would receive (err, { header, content, stream });
+        // Callback would receive (err, { header, content, socket });
         callback(...arguments);
         // Remove this handler to prevent duplicate callbacks
         delete sharedcache.pendingRequests[packetId];
@@ -130,13 +132,13 @@ module.exports.messagePeer = function(socket, type, payload, timeout, callback) 
 // If wait == -1 then it will not time out
 // If wait == 0/undefined/null then it will not wait
 // If wait > 0, the timeout is number of ms to timeout
-module.exports.messageAllPeers = function(type, payload, timeout, callback) {
+export function messageAllPeers(type, payload, timeout, callback) {
   // Message to send:
   async.each(clientConnections, (client, callback) => {
     module.exports.messagePeer(client.socket, type, payload, timeout, callback);
   }, callback);
 };
 
-module.exports.askAllPeers = function(type, payload, timeout, callback) {
+export function askAllPeers(type, payload, timeout, callback) {
 
 };

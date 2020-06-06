@@ -3,15 +3,17 @@
 
 // This is triggered randomly
 
-const hostname = require("os").hostname().trim().toLowerCase();
+import os from "os";
 
-const messsager = require("../messager");
-const groupTimer = require("../group-timer");
+import messager from "../messager";
+// import groupTimer from "../group-timer";
+
+const hostname = os.hostname().trim().toLowerCase();
 
 module.exports = function keepAliveFunction() {
   console.log(`${hostname} - Asking peers if they are alive`);
 
-  messsager.messageAllPeers("network_ask_alive", {}, 1000, (err, socket) => {
+  messager.messageAllPeers("network_ask_alive", {}, 1000, (err, socket) => {
     if (err && err.message.includes("timed out")) {
       // There was a timeout, someone isn't responding
       // That node should be restarted

@@ -1,14 +1,14 @@
 // We communicate network details to the guest application through this
 // interface
 
-const express = require("express");
-const bodyParser = require("body-parser");
-const config = require("config");
+import express from "express";
+import bodyParser from "body-parser";
+import config from "config";
 
 const app = express();
 
 // const sharedcache = require("../sharedcache");
-const messager = require("../messager");
+import * as messager from "../messager";
 
 // This port needs to be the same as the port that is used in api-spoof
 const port = config.get("internalPort");

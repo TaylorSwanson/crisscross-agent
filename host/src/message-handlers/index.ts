@@ -1,8 +1,7 @@
 // Passes worker messages to correct handlers
 
-const fs = require("fs");
-const path = require("path");
-// const log = require("../utils/log");
+import fs from "fs";
+import path from "path";
 
 const handlers = {};
 const ignoredFiles = ["index", "headers"];
@@ -34,7 +33,7 @@ if (Object.getOwnPropertyNames(handlers).length === 0)
 
 // Call workerHandlers() with payload and the master can send info to workers
 // { header, content, socket }
-module.exports = function(payload) {
+export = function(payload) {
   try {
     payload.header = JSON.parse(payload.header);
   } catch (e) {};

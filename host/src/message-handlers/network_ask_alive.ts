@@ -1,12 +1,12 @@
 // Simply responds with true to indicate that the server is responsive
 
-const os = require("os");
+import os from "os";
 const hostname = os.hostname();
 
 const groupTimer = require("../modules/group-timer");
 const aliveWatcher = require("../modules/alive-watcher");
 
-const packetFactory = require("xxp").packetFactory;
+import packetFactory from "xxp";
 
 module.exports = function({ header, content, socket }) {
 

@@ -7,8 +7,7 @@ const sharedcache = require("../sharedcache");
 const messager = require("../messager");
 const messageHandler = require("../../message-handlers");
 
-const packetDecoder = require("xxp").packetDecoder;
-const packetFactory = require("xxp").packetFactory;
+import * as xxp from "xxp";
 
 const hostname = os.hostname().trim().toLowerCase();
 
@@ -35,7 +34,7 @@ module.exports.connectTo = function(host, port, callback) {
   connection.on("ready", () => {
     console.log(`${hostname} - ready to talk to ${host}:${port}`);
 
-    const packet = packetFactory.newPacket({
+    const packet = xxp.newPacket({
       header: {
         type: "network_handshake_identify"
       },
@@ -51,7 +50,7 @@ module.exports.connectTo = function(host, port, callback) {
   });
 
   // This lets the server handle incoming messages with the message handlers
-  packetDecoder(connection, messageHandler);
+  xxp.packetDecoder(connection, messageHandler);
 
   connection.on("timeout", () => {
     console.log(`${hostname} - timeout on ${host}:${port}`);

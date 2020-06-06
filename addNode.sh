@@ -59,9 +59,13 @@ multipass exec $INSTANCENAME -- sudo /home/ubuntu/host/$INSTALLNAME
 multipass exec $INSTANCENAME -- rm /home/ubuntu/host/$INSTALLNAME
 multipass exec $INSTANCENAME -- sudo apt-get install -y nodejs
 
+echo "Building ts..."
+cd $BASEDIR/host/
+npm run build-ts
+cd $BASEDIR
+
 echo "Copying host code"
-$(cd host; npm run build-ts)
-cp -r ./host/dist/* $MOUNTPOINT/host/
+cp -r $BASEDIR/host/dist/* $MOUNTPOINT/host/
 
 echo "Done"
 

@@ -7,13 +7,17 @@ if [ ! -d "$BASEDIR/host/node_modules" ]; then
   $(cd ./host && npm install)
 fi
 
-$(cd $BASEDIR/host/; npm run build-ts)
+echo "Building ts..."
+
+cd $BASEDIR/host/
+npm run build-ts
+cd $BASEDIR
 
 INSTANCENAMES=($(multipass list | sed -n '1d;p' | awk '{print $1}'))
 for i in "${INSTANCENAMES[@]}"; do
   echo "Copying to $i"
   MOUNTPOINT="$BASEDIR/dev-mounts/$i"
-  cp -r ./host/dist/* $MOUNTPOINT/host/ &
+  cp -r $BASEDIR/host/dist/* $MOUNTPOINT/host/ &
 done
 
 wait

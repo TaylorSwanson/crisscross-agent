@@ -19,9 +19,13 @@
     "fs-extra": "^9.0.0",
     "line-reader": "^0.4.0",
     "nodegit": "^0.26.5",
-    "xxp": "github:TaylorSwanson/xxp#573d3fbcee45f1deef12ca55c479ab503d2155ac"
+    "xxp": "github:TaylorSwanson/xxp"
   },
   "devDependencies": {
+    "@types/async": "^3.2.3",
+    "@types/body-parser": "^1.19.0",
+    "@types/config": "0.0.36",
+    "@types/express": "^4.17.6",
     "@types/node": "^14.0.11",
     "source-map-support": "^0.5.19"
   }
