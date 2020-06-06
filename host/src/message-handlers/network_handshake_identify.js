@@ -10,13 +10,13 @@ const messager = require("../modules/messager");
 
 const hostname = require("os").hostname().trim().toLowerCase();
 
-module.exports = function({ header, content, stream }) {
+module.exports = function({ header, content, socket }) {
 
-  console.log(`${hostname} - client at ${stream.address().address} identified \
+  console.log(`${hostname} - client at ${socket.address().address} identified \
 as ${content.name}`);
 
   messager.addClient({
-    socket: stream,
+    socket: socket,
     name: content.name
   });
 
@@ -31,7 +31,7 @@ as ${content.name}`);
   }).packet;
   
   // Let client know that we are accepting messages now
-  stream.write(packet, () => {
-    console.log(`${hostname} - client at ${stream.address().address} is accepted`);
+  socket.write(packet, () => {
+    console.log(`${hostname} - client at ${socket.address().address} is accepted`);
   });
 };

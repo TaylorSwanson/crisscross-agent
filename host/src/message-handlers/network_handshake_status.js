@@ -7,17 +7,17 @@ const messager = require("../modules/messager");
 
 const hostname = require("os").hostname().trim().toLowerCase();
 
-module.exports = function({ header, content, stream }) {
+module.exports = function({ header, content, socket }) {
 
   if (content.status == "accepted") {
-    console.log(`${hostname} - peer at ${stream.address().address} replied:`, content);
+    console.log(`${hostname} - peer at ${socket.address().address} replied:`, content);
 
     messager.addClient({
-      socket: stream,
+      socket,
       name: content.name
     });
   } else {
-    console.log(`${hostname} - peer at ${stream.address().address} rejected us: ${content.status}`);
+    console.log(`${hostname} - peer at ${socket.address().address} rejected us:`, content);
   }
   
 };

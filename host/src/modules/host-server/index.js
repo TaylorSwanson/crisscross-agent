@@ -25,21 +25,19 @@ module.exports.start = function() {
   console.log("Starting host server", hostname);
 
   server = net.createServer(socket => {
-      
-    const connection = socket;
-
-    console.log(`${hostname} - client at ${connection.address().address} connected, \
+    
+    console.log(`${hostname} - client at ${socket.address().address} connected, \
 waiting for identification`);
 
     // This lets the server handle incoming messages with the message handlers
-    packetDecoder(connection, messageHandler);
+    packetDecoder(socket, messageHandler);
     
     // Client dropped out
-    connection.on("end", () => {
-      console.log(`${hostname} - client at ${connection.address().address} ended connection`);
+    socket.on("end", () => {
+      console.log(`${hostname} - client at ${socket.address().address} ended connection`);
 
       messager.removeClient({
-        socket: connection,
+        socket,
         name: null
       });
 

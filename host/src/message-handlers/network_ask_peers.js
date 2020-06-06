@@ -7,13 +7,13 @@ const packetFactory = require("xxp").packetFactory;
 const sharedcache = require("../modules/sharedcache");
 const messager = require("../modules/messager");
 
-module.exports = function({ header, content, stream }) {
+module.exports = function({ header, content, socket }) {
   const num = Math.floor(Math.random() * (Number.MAX_SAFE_INTEGER - 1));
 
   const packet = packetFactory.newPacket({
     header: {
       type: "network_reply_generic",
-      "xxh__responseto": header["xxh__packetid"]
+      "xxp__responseto": header["xxp__packetid"]
     },
     content: {
       // peers: sharedcache["peers"] || [],
@@ -21,5 +21,5 @@ module.exports = function({ header, content, stream }) {
     }
   }).packet;
   
-  stream.write(packet);
+  socket.write(packet);
 };

@@ -7,22 +7,22 @@
 const packetFactory = require("xxp").packetFactory;
 const sharedcache = require("../modules/sharedcache");
 
-module.exports = function({ header, content, stream }) {
+module.exports = function({ header, content, socket }) {
 
-  if (!header.hasOwnProperty("xxh__responseto"))
+  if (!header.hasOwnProperty("xxp__responseto"))
     throw new Error("Received response packet with no responseTo header");
 
   if (!sharedcache.hasOwnProperty("pendingRequests"))
     return console.warn("No pendingRequests object in sharedcache");
   
   // Check for response packetid-specific handler
-  if (!sharedcache.pendingRequests.hasOwnProperty(header["xxh__responseto"]))
-    return console.log("Pending request is closed:", header["xxh__responseto"]);
+  if (!sharedcache.pendingRequests.hasOwnProperty(header["xxp__responseto"]))
+    return console.log("Pending request is closed:", header["xxp__responseto"]);
   
   // Trigger the callback
-  const cbFunction = sharedcache.pendingRequests[header["xxh__responseto"]];
+  const cbFunction = sharedcache.pendingRequests[header["xxp__responseto"]];
   if (typeof cbFunction != "function")
     throw new Error("Network reply callback must be a function");
 
-  cbFunction(null, { header, content, stream });
+  cbFunction(null, { header, content, socket });
 };

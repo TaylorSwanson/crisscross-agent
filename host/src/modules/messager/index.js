@@ -6,6 +6,8 @@ const async = require("async");
 const packetFactory = require("xxp").packetFactory;
 const sharedcache = require("../sharedcache");
 
+const hostname = require("os").hostname().trim().toLowerCase();
+
 // sharedcache.clientConnections = [];
 // const clientConnections = sharedcache.clientConnections;
 const clientConnections = [];
@@ -24,9 +26,15 @@ module.exports.addClient = function(client) {
     return console.warn("Client was already added to the messager:", client.name);
   }
 
+  console.log(`${hostname} - adding client: ${client.name}`);
+
   clientConnections.push(client);
 };
 module.exports.removeClient = function(client) {
+  if (typeof client === "undefined") {
+    // TODO determine who dropped out
+    return console.warn("Cannot remove undefined client");
+  }
   const idx = clientConnections.findIndex(c => c.name == client.name);
   if (idx === -1) {
     return console.log("Cannot remove non-existing client:", client.name);
