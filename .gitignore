@@ -1,6 +1,6 @@
 .DS_Store
 node_modules
-/dist
+dist
 # /multipass-cache
 
 # local env files
