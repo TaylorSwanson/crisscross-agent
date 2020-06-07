@@ -7,11 +7,11 @@ const sharedcache = require("../sharedcache");
 const messager = require("../messager");
 const messageHandler = require("../../message-handlers");
 
-import * as xxp from "xxp";
+const xxp = require("xxp");
 
 const hostname = os.hostname().trim().toLowerCase();
 
-module.exports.connectTo = function(host, port, callback) {
+export function connectTo(host, port, callback) {
   // Connect to a remote server
   const connection = net.createConnection(port, host, () => {
     console.log(`${hostname} - connecting to ${host}:${port}`);
@@ -34,7 +34,7 @@ module.exports.connectTo = function(host, port, callback) {
   connection.on("ready", () => {
     console.log(`${hostname} - ready to talk to ${host}:${port}`);
 
-    const packet = xxp.newPacket({
+    const packet = xxp.packetFactory.newPacket({
       header: {
         type: "network_handshake_identify"
       },

@@ -17,8 +17,8 @@ fi
 # Node needs a random name to prevent collisions
 INSTANCENAME=`openssl rand -hex 5`
 INSTANCENAME="x$INSTANCENAME"
-# This is where we will mount the fs of each node
-MOUNTPOINT="$BASEDIR/dev-mounts/$INSTANCENAME"
+# # This is where we will mount the fs of each node
+# MOUNTPOINT="$BASEDIR/dev-mounts/$INSTANCENAME"
 
 
 # # We do this so the node version is always the same
@@ -39,7 +39,7 @@ MOUNTPOINT="$BASEDIR/dev-mounts/$INSTANCENAME"
 #   curl -SLsf "https://deb.nodesource.com/setup_14.x" > $INSTALLSCRIPTPATH
 # fi
 
-# Do the magic with multipass
+# # Do the magic with multipass
 multipass launch -vv -d 512M -m 360M -n "$INSTANCENAME" --cloud-init ./dev_cloud_init.yml
 # mkdir -p $MOUNTPOINT
 
@@ -47,9 +47,9 @@ multipass launch -vv -d 512M -m 360M -n "$INSTANCENAME" --cloud-init ./dev_cloud
 NEWIP=$(multipass list | grep $INSTANCENAME | awk '{print $3}')
 echo "New node at $NEWIP"
 
-# Mount, then make sure mount is at home
-# Mount directory must not exist already
-# multipass mount $MOUNTPOINT $INSTANCENAME:/home/ubuntu/host
+# # Mount, then make sure mount is at home
+# # Mount directory must not exist already
+# # multipass mount $MOUNTPOINT $INSTANCENAME:/home/ubuntu/host
 # echo "Node mounted at $MOUNTPOINT at remote /home/ubuntu/host"
 
 # echo "Installing deps"
@@ -67,7 +67,7 @@ echo "New node at $NEWIP"
 # # echo "Copying host code"
 # # cp -r $BASEDIR/host/* $MOUNTPOINT/host/
 
-echo "Done"
+echo "Created"
 
 
 # IMPORTANT last line must be the ip address of the server

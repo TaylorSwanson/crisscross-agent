@@ -3,7 +3,7 @@
 
 import os from "os";
 
-import * as xxp from "xxp";
+const xxp = require("xxp");
 import * as messager from "../modules/messager"; 
 
 const hostname = os.hostname().trim().toLowerCase();

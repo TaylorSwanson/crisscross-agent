@@ -1,21 +1,23 @@
 // Main entrypoint for this system
 // This application is single-threaded and should be as minimal as possible
 
-const fs = require("fs");
-const os = require("os");
-const crypto = require("crypto");
-const path = require("path");
+import "source-map-support/register";
+
+import fs from "fs";
+import os from "os";
+import crypto from "crypto";
+import path from "path";
 // const child_process = require("child_process");
 
-const config = require("config");
+import config from "config";
 
-const hostserver = require("./modules/host-server");
-const hostclient = require("./modules/host-client");
-const guesthost = require("./modules/guest-host");
-const sharedcache = require("./modules/sharedcache");
-const serverApi = require("./modules/server-api");
-const aliveWatcher = require("./modules/alive-watcher");
-const groupTimer = require("./modules/group-timer");
+import hostserver from "./modules/host-server";
+import sharedcache from "./modules/sharedcache";
+import * as hostclient from "./modules/host-client";
+import * as guesthost from "./modules/guest-host";
+import * as serverApi from "./modules/server-api";
+import * as aliveWatcher from "./modules/alive-watcher";
+import * as groupTimer from "./modules/group-timer";
 
 // const packetFactory = require("xxp").packetFactory;
 
@@ -27,13 +29,14 @@ process.chdir(homedir);
 let configPath = path.join(homedir, "application", "xx.json");
 
 // Use specific application directory, useful for dev
+//@ts-ignore
 if (config["XX_APPDIR"] && config.XX_APPDIR.length) {
   configPath = path.join(process.env.XX_APPDIR, "xx.json");
 }
 
 let instConfig = "";
 try {
-  instConfig  = fs.readFileSync(configPath);
+  instConfig = fs.readFileSync(configPath).toString("utf8");
 } catch (err) {
   if (err.code === "ENOENT") {
     // TODO log to a more recognizable location
@@ -67,6 +70,7 @@ serverApi.getAllServers("", (err, nodes) => {
 
   // Connect as client to existing servers
   connectablePeers.forEach(p => {
+    //@ts-ignore
     hostclient.connectTo(p.ipv4, config.port, () => {});
   });
 });
@@ -75,4 +79,4 @@ serverApi.getAllServers("", (err, nodes) => {
 // Start the host that the guest application can connect to
 guesthost.start();
 // Start keepalive watcher
-groupTimer.randomTimer("alive", 60, 10, aliveWatcher);
+groupTimer.randomTimer("alive", 60, 10, aliveWatcher.keepAliveFunction);

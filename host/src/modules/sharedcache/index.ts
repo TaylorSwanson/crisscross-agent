@@ -5,6 +5,7 @@ interface SharedCacheStore {
   pendingRequests: {}
 }
 
-let store: SharedCacheStore;
+//@ts-ignore
+let store: SharedCacheStore = {};
 
 export default store;

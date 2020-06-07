@@ -49,7 +49,7 @@ app.get("/servers/:name?", (req, res, next) => {
 
 // TODO request to force server listing?
 
-module.exports.start = function() {
+export function start() {
   const server = app.listen(port);
   
   console.log("CrissCross guest API running on port", port);

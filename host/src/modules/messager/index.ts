@@ -5,7 +5,7 @@ import os from "os";
 
 import async from "async";
 
-import packetFactory from "xxp";
+const xxp = require("xxp");
 import sharedcache from "../sharedcache";
 
 const hostname = os.hostname().trim().toLowerCase();
@@ -65,7 +65,7 @@ export function getAllConnectionAddresses() {
 // TODO switch wait param with options obj
 export function messagePeer(socket, type, payload, timeout, callback) {
 
-  const packet = packetFactory.newPacket({
+  const packet = xxp.packetFactory.newPacket({
     header: { type }, content: payload
   });
   const packetId = packet.id;

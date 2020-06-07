@@ -6,12 +6,12 @@
 
 import os from "os";
 
-import * as xxp from "xxp";
+const xxp = require("xxp");
 import * as messager from "../modules/messager"; 
 
 const hostname = os.hostname().trim().toLowerCase();
 
-export default function({ header, content, socket }) {
+module.exports = function({ header, content, socket }) {
 
   console.log(`${hostname} - client at ${socket.address().address} identified \
 as ${content.name}`);
@@ -21,7 +21,7 @@ as ${content.name}`);
     name: content.name
   });
 
-  const packet = xxp.newPacket({
+  const packet = xxp.packetFactory.newPacket({
     header: {
       type: "network_handshake_status"
     },

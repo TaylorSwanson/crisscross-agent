@@ -6,13 +6,13 @@ const hostname = os.hostname();
 const groupTimer = require("../modules/group-timer");
 const aliveWatcher = require("../modules/alive-watcher");
 
-import * as xxp from "xxp";
+const xxp = require("xxp");
 
 module.exports = function({ header, content, socket }) {
 
   console.log(`${hostname} - Keepalive packet received, responding...`);
 
-  const packet = xxp.newPacket({
+  const packet = xxp.packetFactory.newPacket({
     header: {
       type: "network_reply_generic",
       "xxp__responseto": header["xxp__packetid"]

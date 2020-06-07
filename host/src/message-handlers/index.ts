@@ -15,6 +15,9 @@ files.forEach(file => {
   // Ignore directories
   if (handlerStat.isDirectory()) return;
 
+  // Ignore map files
+  if (handlerPath.endsWith(".map")) return;
+
   // This is the name of the message that can be called
   const handlerName = path.basename(handlerPath, ".js");
   
@@ -52,6 +55,8 @@ export = function(payload) {
     return console.error({ payload }, "Payload header has no message type");
   if (!handlers.hasOwnProperty(payload.header.type))
     return console.error({ payload }, "No handler defined for message type");
+  if (typeof handlers[payload.header.type] !== "function")
+    return console.error({ handler: handlers[payload.header.type] }, "Handler is not a function");
 
   // We'll need to reply to the worker with the result of this event
   return handlers[payload.header.type](payload, (err, results) => {

@@ -6,7 +6,7 @@
 
 import os from "os";
 
-// import * as xxp from "xxp";
+// const xxp = require("xxp");
 // import * as messager from "../modules/messager"; 
 import sharedcache from "../modules/sharedcache"; 
 
