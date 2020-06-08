@@ -16,23 +16,19 @@ module.exports = function({ header, content, socket }) {
   console.log(`${hostname} - client at ${socket.address().address} identified \
 as ${content.name}`);
 
-  messager.addClient({
-    socket: socket,
-    name: content.name
-  });
-
-  const packet = xxp.packetFactory.newPacket({
-    header: {
-      type: "network_handshake_status"
-    },
+  messager.messagePeer(socket, "network_handshake_status", {
+    header: {},
     content: {
       status: "accepted",
       name: hostname
     }
-  }).packet;
-  
-  // Let client know that we are accepting messages now
-  socket.write(packet, () => {
+  }, 1000, (err) => {
+    if (err) console.error(err);
     console.log(`${hostname} - client at ${socket.address().address} is accepted`);
+
+    messager.addClient({
+      socket: socket,
+      name: content.name
+    });
   });
 };

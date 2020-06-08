@@ -6,9 +6,10 @@ const activeTimers = {};
 // Restarts a timer with a random interval
 // Variability is total random difference between intervals
 // Defaullt of 60 interval with 6 variability leads to +- 3s on the timer
-export function randomTimer(name, interval = 60, variability = 6, fn: Function) {
+export function randomTimer(name: string, interval = 60, variability = 6, fn: Function) {
   if (typeof name !== "string")
-    throw new Error("Timer name must be a string")
+    throw new Error("Timer name must be a string");
+  
   name = name.toLowerCase().trim();
 
   // Generate the offset in ms

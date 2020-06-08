@@ -15,20 +15,35 @@ const hostname = os.hostname().trim().toLowerCase();
 
 module.exports = function({ header, content, socket }) {
 
+  console.log("network_reply_generic");
+
   if (!header.hasOwnProperty("xxp__responseto"))
-    throw new Error("Received response packet with no responseTo header");
+    throw new Error("Received reply packet with no responseTo header");
+  
+  const responseToId = header["xxp__responseto"];
 
   if (!sharedcache.hasOwnProperty("pendingRequests"))
     return console.warn("No pendingRequests object in sharedcache");
   
   // Check for response packetid-specific handler
-  if (!sharedcache.pendingRequests.hasOwnProperty(header["xxp__responseto"]))
-    return console.log("Pending request is closed:", header["xxp__responseto"]);
+  if (!sharedcache.pendingRequests.hasOwnProperty(responseToId))
+    return console.log("Pending request is closed:", responseToId);
   
   // Trigger the callback
-  const cbFunction = sharedcache.pendingRequests[header["xxp__responseto"]];
+  const cbFunction = sharedcache.pendingRequests[responseToId];
   if (typeof cbFunction != "function")
     throw new Error("Network reply callback must be a function");
 
   cbFunction(null, { header, content, socket });
+  delete sharedcache.pendingRequests[responseToId];
+  
+  // Clear any timeouts for this request
+  console.log(`${hostname} - pending keys`, Object.keys(sharedcache.pendingRequestTimeouts));
+  console.log(`${hostname} - currently removing key`, responseToId);
+  if (sharedcache.pendingRequestTimeouts &&
+    sharedcache.pendingRequestTimeouts.hasOwnProperty(responseToId)) {
+    
+    clearTimeout(sharedcache.pendingRequestTimeouts[responseToId]);
+    delete sharedcache.pendingRequestTimeouts[responseToId];
+  }
 };

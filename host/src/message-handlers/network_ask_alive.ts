@@ -3,8 +3,9 @@
 import os from "os";
 const hostname = os.hostname();
 
-const groupTimer = require("../modules/group-timer");
-const aliveWatcher = require("../modules/alive-watcher");
+import * as groupTimer from "../modules/group-timer";
+import * as aliveWatcher from "../modules/alive-watcher";
+import * as messager from "../modules/messager";
 
 const xxp = require("xxp");
 
@@ -12,18 +13,17 @@ module.exports = function({ header, content, socket }) {
 
   console.log(`${hostname} - Keepalive packet received, responding...`);
 
-  const packet = xxp.packetFactory.newPacket({
+  messager.messagePeer(socket, "network_reply_generic", {
     header: {
-      type: "network_reply_generic",
       "xxp__responseto": header["xxp__packetid"]
-    },
+    }, 
     content: {
       alive: Date.now()
     }
-  }).packet;
+  }, 1000, (err) => {
+    if (err) return console.error(err);
 
-  socket.write(packet);
-
-  // Restart the random timer so we don't send the message too often
-  groupTimer.randomTimer("alive", 60, 10, aliveWatcher);
+    // Restart the random timer so we don't send the message too often
+    groupTimer.randomTimer("alive", 60, 10, aliveWatcher.keepAliveFunction);
+  });
 };

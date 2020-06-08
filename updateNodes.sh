@@ -29,10 +29,11 @@ for i in "${INSTANCENAMES[@]}"; do
   # mkdir -p $MOUNTPOINT/host/
 
   # cp $BASEDIR/xxhost $MOUNTPOINT/host/xxhost &
-
+  $(
   multipass copy-files $BASEDIR/xxhost $i:xxhost
   multipass copy-files $BASEDIR/config.tar $i:config.tar
-  multipass exec $i -- bash -c "mkdir -p ./{host,config} && mv ./xxhost ./host/xxhost && tar -xf config.tar && rm config.tar" &
+  multipass exec $i -- bash -c "mkdir -p ./{host,config} && mv ./xxhost ./host/xxhost && tar -xf config.tar && rm config.tar"
+  ) &
 done
 
 wait

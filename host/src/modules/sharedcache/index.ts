@@ -2,10 +2,14 @@
 // Really simple
 
 interface SharedCacheStore {
-  pendingRequests: {}
+  pendingRequests: {},
+  pendingRequestTimeouts: {}
 }
 
 //@ts-ignore
 let store: SharedCacheStore = {};
+
+store.pendingRequests = {};
+store.pendingRequestTimeouts = {};
 
 export default store;

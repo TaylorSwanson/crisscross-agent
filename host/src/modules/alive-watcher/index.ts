@@ -13,7 +13,7 @@ const hostname = os.hostname().trim().toLowerCase();
 export function keepAliveFunction() {
   console.log(`${hostname} - Asking peers if they are available`);
 
-  messager.messageAllPeers("network_ask_alive", {}, 1000, (err: Error, socket: NodeJS.Socket) => {
+  messager.messageAllPeers("network_ask_alive", {}, 2000, (err: Error, socket: NodeJS.Socket) => {
     if (err && err.message.includes("timed out")) {
       // There was a timeout, someone isn't responding
       // That node should be restarted

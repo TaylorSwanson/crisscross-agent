@@ -11,16 +11,15 @@ const hostname = os.hostname().trim().toLowerCase();
 
 module.exports = function({ header, content, socket }) {
 
-  const packet = xxp.packetFactory.newPacket({
+  messager.messagePeer(socket, "network_reply_generic", {
     header: {
-      type: "network_reply_generic",
       "xxp__responseto": header["xxp__packetid"]
     },
     content: {
       // peers: sharedcache["peers"] || [],
       all: messager.getAllConnectionAddresses()
     }
-  }).packet;
-  
-  socket.write(packet);
+  }, 1000, (err) => {
+    if (err) console.error(err);
+  });
 };

@@ -4,7 +4,7 @@ const net = require("net");
 const os = require("os");
 
 const sharedcache = require("../sharedcache");
-const messager = require("../messager");
+import * as messager from "../messager";
 const messageHandler = require("../../message-handlers");
 
 const xxp = require("xxp");
@@ -13,46 +13,38 @@ const hostname = os.hostname().trim().toLowerCase();
 
 export function connectTo(host, port, callback) {
   // Connect to a remote server
-  const connection = net.createConnection(port, host, () => {
+  const socket = net.createConnection(port, host, () => {
     console.log(`${hostname} - connecting to ${host}:${port}`);
   });
 
-  connection.on("end", () => {
+  socket.on("end", () => {
     console.log(`${hostname} - disconnected from ${host}:${port}`);
     // Lost connection, looks intentional (FIN packet sent)
     // We should have received a goodbye message so this shouldn't be an issue
     // TODO verify that we know it's gone
   });
 
-  connection.on("error", err => {
+  socket.on("error", err => {
     if (err.code == "ECONNREFUSED") {
       return console.log(`${hostname} - not available as host: ${host}:${port}`);
     }
     console.log(`${hostname} - error on ${host}:${port}`, err);
   });
 
-  connection.on("ready", () => {
+  socket.on("ready", () => {
     console.log(`${hostname} - ready to talk to ${host}:${port}`);
 
-    const packet = xxp.packetFactory.newPacket({
-      header: {
-        type: "network_handshake_identify"
-      },
+    messager.messagePeer(socket, "network_handshake_identify", {
+      header: {},
       content: {
         name: hostname
       }
-    }).packet;
-    
-    connection.write(packet, () => {
+    }, 1000, (err) => {
+      if (err) return console.error(err);
       console.log(`${hostname} - identified to ${host}:${port}`);
-      // We've identified ourselves, wait for an accepted reply
     });
-  });
 
-  // This lets the server handle incoming messages with the message handlers
-  xxp.packetDecoder(connection, messageHandler);
-
-  connection.on("timeout", () => {
-    console.log(`${hostname} - timeout on ${host}:${port}`);
+    // This lets the server handle incoming messages with the message handlers
+    xxp.packetDecoder(socket, messageHandler);
   });
 };
