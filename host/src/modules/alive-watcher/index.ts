@@ -28,5 +28,5 @@ export function keepAliveFunction() {
     }
   };
 
-  messager.messageAllPeers("network_ask_alive", {}, 2000, peerRequestHandler);
+  messager.messageAllPeers("network_ask_alive", {}, 3000, peerRequestHandler);
 };

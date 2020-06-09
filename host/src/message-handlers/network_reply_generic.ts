@@ -15,7 +15,7 @@ const hostname = os.hostname().trim().toLowerCase();
 
 module.exports = function({ header, content, socket }) {
 
-  console.log(`${hostname} - network_reply_generic: ${header} ${content}`);
+  // console.log(`${hostname} - network_reply_generic: ${header} ${content}`);
 
   if (!header.hasOwnProperty("xxp__responseto"))
     throw new Error("Received reply packet with no responseTo header");
@@ -38,10 +38,9 @@ module.exports = function({ header, content, socket }) {
   delete sharedcache.pendingRequests[responseToId];
   
   // Clear any timeouts for this request
-  console.log(`${hostname} - pending keys`, Object.keys(sharedcache.pendingRequestTimeouts));
-  console.log(`${hostname} - currently removing key`, responseToId);
+  // console.log(`${hostname} - pending keys`, Object.keys(sharedcache.pendingRequestTimeouts));
+  // console.log(`${hostname} - currently removing key`, responseToId);
   if (sharedcache.pendingRequestTimeouts.hasOwnProperty(responseToId)) {
-    
     clearTimeout(sharedcache.pendingRequestTimeouts[responseToId]);
     delete sharedcache.pendingRequestTimeouts[responseToId];
   }

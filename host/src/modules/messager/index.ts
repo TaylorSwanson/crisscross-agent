@@ -55,11 +55,33 @@ export function removeClient(client: ClientDefinition): void {
   removeClientByName(client.name);
 };
 
+// Returns client by searching for either socket or name
+export function getClient(identifier: NodeJS.Socket | string): ClientDefinition {
+  if (typeof identifier === "string") {
+    // Looking by name
+    identifier = identifier.toLowerCase().trim();
+    return clientConnections.find(c => c.name === identifier)
+  } else {
+    // Looking by socket
+    return clientConnections.find(c => c.socket == identifier);
+  }
+};
+
 export function removeClientByName(clientName: string): void {
   const idx = clientConnections.findIndex(c => c.name == clientName);
 
   if (idx === -1) {
     return console.log("Cannot remove non-existing client:", clientName);
+  }
+
+  clientConnections.splice(idx, 1);
+};
+
+export function removeClientBySocket(socket: NodeJS.Socket): void {
+  const idx = clientConnections.findIndex(c => c.socket == socket);
+
+  if (idx === -1) {
+    return console.log("Cannot remove non-existing client with socket:", socket);
   }
 
   clientConnections.splice(idx, 1);
@@ -92,7 +114,7 @@ export function messagePeer(
   });
   const packetId = packet.id;
 
-  console.log(`\n${hostname} - Messaging peer: ${type}`);
+  // console.log(`\n${hostname} - Messaging peer: ${type}`);
 
   // Check for strange occurrences
   if (sharedcache.pendingRequests.hasOwnProperty(packetId)) {
@@ -103,7 +125,7 @@ export function messagePeer(
   
   // Start sending the packet
   socket.write(packet.packet, function() {
-    console.log(`${hostname} - ${type} packet sent\n`);
+    // console.log(`${hostname} - ${type} packet sent\n`);
 
     const emptyResult = { header: null, content: null, socket };
 
@@ -185,10 +207,10 @@ export function messageAllPeers(
   timeout: number,
   callback
 ): void {
-  console.log(`${hostname} - Messaging all peers:`, clientConnections.length);
+  // console.log(`${hostname} - Messaging all peers:`, clientConnections.length);
 
   clientConnections.forEach(client => {
-    console.log(`${hostname} - sending one of many to ${client.name} type ${type}`);
+    // console.log(`${hostname} - sending one of many to ${client.name} type ${type}`);
     messagePeer(client.socket, type, payload, timeout, callback);
   });
 };

@@ -11,7 +11,7 @@ const xxp = require("xxp");
 
 module.exports = function({ header, content, socket }) {
 
-  console.log(`${hostname} - Keepalive packet received, responding...`);
+  // console.log(`${hostname} - Keepalive packet received, responding...`);
 
   // We need a reply before we can add as client
   messager.replyToPeer({ header, content, socket }, {

@@ -32,7 +32,7 @@ export function connectTo(host, port, callback) {
   });
 
   socket.on("ready", () => {
-    console.log(`${hostname} - ready to talk to server ${host}:${port}, registering handlers`);
+    // console.log(`${hostname} - ready to talk to server ${host}:${port}, registering handlers`);
 
     // This lets the server handle incoming messages with the message handlers
     xxp.packetDecoder(socket, messageHandler);

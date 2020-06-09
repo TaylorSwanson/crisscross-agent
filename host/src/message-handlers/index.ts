@@ -63,7 +63,7 @@ export = function(payload) {
     return console.error({ handler: handlers[payload.header.type] }, "Handler is not a function");
 
   // We'll need to reply to the worker with the result of this event
-  console.log(`${hostname} - Calling handler for`, payload.header.type);
+  // console.log(`${hostname} - Calling handler for`, payload.header.type);
   return handlers[payload.header.type](payload, (err, results) => {
     if (err) return console.error({ err, results }, `${hostname} - Error in worker handler`);
     //

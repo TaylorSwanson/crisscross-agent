@@ -29,14 +29,14 @@ export function start() {
     // Client connected
     
     //@ts-ignore
-    const ipv4 = socket.address().address;
-    console.log(`${hostname} - ready to talk to client at ${ipv4}, registering handlers`);
+    // const ipv4 = socket.address().address;
+    // console.log(`${hostname} - ready to talk to client at ${ipv4}, registering handlers`);
 
     // This lets the server handle incoming messages with the message handlers
     packetDecoder(socket, messageHandler);
     
 
-    console.log(`${hostname} - asking client to idenfify, sending name`)
+    // console.log(`${hostname} - asking client to idenfify, sending name`)
 
     // Identify to the client who we are
     messager.messagePeer(socket, "network_handshake_identify", {
