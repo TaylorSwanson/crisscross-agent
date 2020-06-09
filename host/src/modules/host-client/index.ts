@@ -28,23 +28,24 @@ export function connectTo(host, port, callback) {
     if (err.code == "ECONNREFUSED") {
       return console.log(`${hostname} - not available as host: ${host}:${port}`);
     }
-    console.log(`${hostname} - error on ${host}:${port}`, err);
+    console.log(`${hostname} - other error on ${host}:${port}`, err);
   });
 
   socket.on("ready", () => {
-    console.log(`${hostname} - ready to talk to ${host}:${port}`);
+    console.log(`${hostname} - ready to talk to server ${host}:${port}, registering handlers`);
 
+    // This lets the server handle incoming messages with the message handlers
+    xxp.packetDecoder(socket, messageHandler);
+
+    // Identify to the server who we are
     messager.messagePeer(socket, "network_handshake_identify", {
       header: {},
       content: {
         name: hostname
       }
-    }, 1000, (err) => {
+    }, -1, (err) => {
       if (err) return console.error(err);
-      console.log(`${hostname} - identified to ${host}:${port}`);
     });
-
-    // This lets the server handle incoming messages with the message handlers
-    xxp.packetDecoder(socket, messageHandler);
   });
+
 };

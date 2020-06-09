@@ -11,7 +11,7 @@ import path from "path";
 
 import config from "config";
 
-import hostserver from "./modules/host-server";
+import * as hostserver from "./modules/host-server";
 import sharedcache from "./modules/sharedcache";
 import * as hostclient from "./modules/host-client";
 import * as guesthost from "./modules/guest-host";

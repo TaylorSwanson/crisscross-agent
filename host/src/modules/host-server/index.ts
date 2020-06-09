@@ -2,14 +2,14 @@
 // Newer peers connect to this server as clients, this server connects as a
 // client to older peers
 
-const net = require("net");
-const os = require("os");
+import net from "net";
+import os from "os";
 
-const config = require("config");
+import config from "config";
 
-const sharedcache = require("../sharedcache");
-const messager = require("../messager");
-const messageHandler = require("../../message-handlers");
+import sharedcache from "../sharedcache";
+import * as messager from "../messager";
+import messageHandler from "../../message-handlers";
 
 const packetDecoder = require("xxp").packetDecoder;
 const packetFactory = require("xxp").packetFactory;
@@ -21,19 +21,38 @@ const activeSockets = {};
 const port = config.get("port");
 const hostname = os.hostname().trim().toLowerCase();
 
-module.exports.start = function() {
-  console.log("Starting host server", hostname);
+export function start() {
+  console.log(`${hostname} - Starting host server`, hostname);
 
   server = net.createServer(socket => {
+    console.log(`${hostname} - A client connected`);
+    // Client connected
     
-    console.log(`${hostname} - client at ${socket.address().address} connected, \
-waiting for identification`);
+    //@ts-ignore
+    const ipv4 = socket.address().address;
+    console.log(`${hostname} - ready to talk to client at ${ipv4}, registering handlers`);
 
     // This lets the server handle incoming messages with the message handlers
     packetDecoder(socket, messageHandler);
     
+
+    console.log(`${hostname} - asking client to idenfify, sending name`)
+
+    // Identify to the client who we are
+    messager.messagePeer(socket, "network_handshake_identify", {
+      header: {},
+      content: {
+        name: hostname
+      },
+    }, -1, (err) => {
+      if (err) console.error(err);
+    });
+
+    //
+    
     // Client dropped out
     socket.on("end", () => {
+      //@ts-ignore
       console.log(`${hostname} - client at ${socket.address().address} ended connection`);
 
       messager.removeClient({
@@ -54,7 +73,7 @@ waiting for identification`);
   });
 
   server.listen(port, () => {
-    console.log(`${hostname} - Server bound to`, port);
+    console.log(`${hostname} - Host server bound to`, port);
   });
 };
 

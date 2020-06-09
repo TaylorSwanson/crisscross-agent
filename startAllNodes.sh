@@ -7,5 +7,5 @@ for i in "${INSTANCENAMES[@]}"; do
   # multipass exec $i -- bash -c "cd host/ && npm start" &
   # multipass exec $i -- bash -c "ls -a ./host/" &
   multipass exec $i -- bash -c "chmod +x ./host/xxhost && ./host/xxhost" &
-  sleep 2.5s
+  sleep 1s
 done

@@ -25,6 +25,12 @@ interface ClientAddresses {
   name: string
 };
 
+interface OriginalMessageFormat {
+  socket: NodeJS.Socket,
+  content,
+  header
+};
+
 // Add a client stream, doesn't matter if it's a server or a client stream
 export function addClient(client: ClientDefinition): void {
 
@@ -49,7 +55,7 @@ export function removeClient(client: ClientDefinition): void {
   removeClientByName(client.name);
 };
 
-export function removeClientByName(clientName: string) {
+export function removeClientByName(clientName: string): void {
   const idx = clientConnections.findIndex(c => c.name == clientName);
 
   if (idx === -1) {
@@ -71,7 +77,8 @@ export function getAllConnectionAddresses(): ClientAddresses[] {
 // If timeout == -1 then it will not time out
 // If timeout == 0/undefined/null then it will not time out
 // If timeout > 0, the timeout is number of ms
-// TODO switch wait param with options obj
+
+// If timeout is <= 0 then there will be no additional response headers
 export function messagePeer(
   socket: NodeJS.Socket,
   type: string,
@@ -85,29 +92,37 @@ export function messagePeer(
   });
   const packetId = packet.id;
 
-  console.log("Messaging peer:", type);
+  console.log(`\n${hostname} - Messaging peer: ${type}`);
 
   // Check for strange occurrences
   if (sharedcache.pendingRequests.hasOwnProperty(packetId)) {
-    console.warn(`Packet id collision (!) : ${packetId}`);
+    console.warn(`${hostname} - Packet id collision (!) : ${packetId}`);
   }
 
+  // console.log(`${hostname} - Sending packet: ${packet.packet.toString("utf8")}`);
+  
   // Start sending the packet
   socket.write(packet.packet, function() {
+    console.log(`${hostname} - ${type} packet sent\n`);
+
+    const emptyResult = { header: null, content: null, socket };
+
     // Determine if we timeout or not
     // If not, we're done when the packet is sent
-    if (!(timeout > 0)) {
-      return callback(...arguments);
-    } else if (timeout > 0) {
+    if (timeout <= 0) {
+      callback(null, emptyResult);
+    } else {
+
+      var timeoutId;
 
       // This handler will be called on reply or timeout regardless
-      // It is also responsible for cleaning up after itself
+      // It is also responsible for cleaning up
       const fnHandler = (function() {
-        return function(err?: Error) {
+        return function(err?: Error, sockDetails?: OriginalMessageFormat) {
           clearTimeout(timeoutId);
   
           // Callback would receive (err, { header, content, socket });
-          callback(...arguments);
+          callback(err, emptyResult);
           // Remove this handler to prevent duplicate callbacks
           delete sharedcache.pendingRequests[packetId];
           // Prevent memory leak? (necessary?)
@@ -118,18 +133,16 @@ export function messagePeer(
       // Save the pending request
       sharedcache.pendingRequests[packetId] = fnHandler;
   
-      // User specified that the message should have a timeout
-  
-      // Expire the response on timeout
-      // IDEA start timeout when client is fully received?
-      const timeoutId = setTimeout(() => {
-        // "timed out" must be in the error message
-        fnHandler(new Error("Reply timed out"));
-      }, timeout);
+      if (timeout !== -1) {
+        // User specified that the message should have a timeout
+        // Expire the response on timeout
+        timeoutId = setTimeout(() => {
+          // "timed out" must be in the error message
+          fnHandler(new Error(`${hostname} - Reply timed out: ${type} ${timeout}ms`), emptyResult);
+        }, timeout);
 
-      sharedcache.pendingRequestTimeouts[packetId] = timeoutId;
-    } else {
-      // Here we can handle timeouts of -1 for non-timeout requests if necessary
+        sharedcache.pendingRequestTimeouts[packetId] = timeoutId;
+      }
     }
 
   });
@@ -144,8 +157,25 @@ export function messagePeer(
   });  
 };
 
+// Does all the response header work for us
+export function replyToPeer(
+  originalMessage: OriginalMessageFormat,
+  payload,
+  timeout: number,
+  callback
+) {
+  messagePeer(originalMessage.socket, "network_reply_generic", {
+    header: {
+      "xxp__responseto": originalMessage.header["xxp__packetid"],
+      ...payload.header
+    },
+    content: payload.content
+  }, timeout, callback);
+};
+
 
 // Sends messages to all connected peers
+// Callback will be sent for each peer request made
 // If wait == -1 then it will not time out
 // If wait == 0/undefined/null then it will not wait
 // If wait > 0, the timeout is number of ms to timeout
@@ -155,11 +185,12 @@ export function messageAllPeers(
   timeout: number,
   callback
 ): void {
-  // console.log("Messaging all peers:", payload, clientConnections);
-  // Message to send:
-  async.each(clientConnections, (client, callback) => {
-    module.exports.messagePeer(client.socket, type, payload, timeout, callback);
-  }, callback);
+  console.log(`${hostname} - Messaging all peers:`, clientConnections.length);
+
+  clientConnections.forEach(client => {
+    console.log(`${hostname} - sending one of many to ${client.name} type ${type}`);
+    messagePeer(client.socket, type, payload, timeout, callback);
+  });
 };
 
 export function askAllPeers(
