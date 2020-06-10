@@ -16,33 +16,30 @@ import responseFactory from "./responseFactory";
 
 
 const wss = new ws.Server({ noServer: true });
-let wsClients: ws[];
+let wsClients;
 
-// Start the ws server on the existing http server
-export function start(httpServer: Server) {
-  httpServer.on("upgrade", (req, socket, head) => {
-    const pathname = url.parse(req.url).pathname;
-    
-    // Call the /ws path to upgrade to websockets for live updates
-    if (pathname === "/ws") {
-      wss.handleUpgrade(req, socket, head, (ws) => {
-        wss.emit("connection", ws, req);
-      });
-    } else {
-      // Don't upgrade anything else
-      socket.destroy();
-    }
+wss.on("connection", (ws, socket) => {
+  // TODO store socket with ws
 
-  });
-};
-
-wss.on("connection", ws => {
   // A client has connected
   ws.on("open", () => {
     console.log("A ws client has connected");
     
-    if (typeof wsClients === "undefined") wsClients = [];
-    wsClients.push(ws);
+    if (typeof wsClients === "undefined") wsClients = {};
+    wsClients.push({
+      ws,
+      socket
+    });
+  });
+
+  ws.on("close", () => {
+    console.log("A ws client has disconnected");
+
+    // We need to remove the client from the pool of servers
+    if (typeof wsClients === "undefined") wsClients = {};
+    const idx = wsClients.findIndex(w => w.ws === ws);
+
+    wsClients.splice(idx, 1);
   });
 
   ws.on("message", (message) => {
@@ -62,3 +59,37 @@ wss.on("connection", ws => {
 
   });
 });
+
+
+// Start the ws server on the existing http server
+export function start(httpServer: Server) {
+  httpServer.on("upgrade", (req, socket, head) => {
+    const pathname = url.parse(req.url).pathname;
+    
+    // Call the /ws path to upgrade to websockets for live updates
+    if (pathname === "/ws") {
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        wss.emit("connection", ws, req);
+      });
+    } else {
+      // Don't upgrade anything else
+      socket.destroy();
+    }
+
+  });
+};
+
+// Sends a message to all ws servers
+// Normally there would be one ws server for the host application, but multiple
+// can connect (for instance if this node has multiple codebasese running)
+export function sendToAll(err: string, payload: object) {
+  const response = responseFactory(err, payload);
+
+  wsClients.forEach(w => {
+    if (w.ws.readyState === ws.OPEN) {
+      w.ws.send(response, (err) => {
+        console.error("Could not message ws", err, w.socket.address().address);
+      });
+    }
+  });
+};
