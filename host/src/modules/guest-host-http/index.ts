@@ -1,5 +1,6 @@
-// We communicate network details to the guest application through this
-// interface
+// We communicate network details to the guest application through this interface
+// This only provides the most basic support
+// The majority of communication is done over websockets
 
 import express from "express";
 import bodyParser from "body-parser";

@@ -11,9 +11,12 @@ import config from "config";
 // const sharedcache = require("../sharedcache");
 // import * as messager from "../messager";
 
-import * as wsHadlers from "./ws-handlers";
+import wsHandler from "./ws-handler";
+import responseFactory from "./responseFactory";
+
 
 const wss = new ws.Server({ noServer: true });
+let wsClients: ws[];
 
 // Start the ws server on the existing http server
 export function start(httpServer: Server) {
@@ -33,25 +36,29 @@ export function start(httpServer: Server) {
   });
 };
 
-
 wss.on("connection", ws => {
+  // A client has connected
+  ws.on("open", () => {
+    console.log("A ws client has connected");
+    
+    if (typeof wsClients === "undefined") wsClients = [];
+    wsClients.push(ws);
+  });
+
   ws.on("message", (message) => {
     let parsedMessage;
     try {
       parsedMessage = JSON.parse(message.toString("utf8"));
     } catch (e) {
-      console.log("Could not decode json in ws request:", message);
+      console.warn("Could not decode json in ws request:", message);
+      
       // Handle error by responding with error
-      return ws.send(JSON.stringify({
-        status: 0,
-        message: "Could not parse JSON"
-      }));
+      const response = responseFactory("Could not parse JSON");
+      return ws.send(response);
     }
 
-    // Handle same requests
-    if (parsedMessage.type === "listservers") {
-      
-    }
+    // Start handling ws messages
+    wsHandler(ws, parsedMessage);
 
   });
 });
