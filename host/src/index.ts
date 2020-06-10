@@ -14,7 +14,8 @@ import config from "config";
 import * as hostserver from "./modules/host-server";
 import sharedcache from "./modules/sharedcache";
 import * as hostclient from "./modules/host-client";
-import * as guesthost from "./modules/guest-host";
+import * as guesthosthttp from "./modules/guest-host-http";
+import * as guesthostws from "./modules/guest-host-ws";
 import * as serverApi from "./modules/server-api";
 import * as aliveWatcher from "./modules/alive-watcher";
 import * as groupTimer from "./modules/group-timer";
@@ -76,7 +77,10 @@ serverApi.getAllServers("", (err, nodes) => {
 });
 
 
-// Start the host that the guest application can connect to
-guesthost.start();
+// Start the http host that the guest application can connect to
+const httpServer = guesthosthttp.start();
+// Start the ws host that the guest application can connect to
+guesthostws.start(httpServer);
+
 // Start keepalive watcher
 groupTimer.randomTimer("alive", 60, 10, aliveWatcher.keepAliveFunction);

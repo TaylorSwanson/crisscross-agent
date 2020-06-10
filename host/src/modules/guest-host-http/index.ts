@@ -9,6 +9,7 @@ const app = express();
 
 // const sharedcache = require("../sharedcache");
 import * as messager from "../messager";
+import { Server } from "http";
 
 // This port needs to be the same as the port that is used in api-spoof
 const port = config.get("internalPort");
@@ -32,25 +33,17 @@ app.get("/", (req, res, next) => {
 
 // List servers in network
 // This doesn't query the network but uses the server's active connection list
-app.get("/servers/:name?", (req, res, next) => {
-  let name = "";
-
-  if (req.params.name) {
-    name = req.params.name.trim().toLowerCase();
-  }
-
-  let servers = messager.getAllConnectionAddresses();
-  if (name.length) {
-    servers = servers.filter(s => s.name === name);
-  }
-
+app.get("/servers", (req, res, next) => {
+  const servers = messager.getAllConnectionAddresses();
   res.status(200).json(servers);
 });
 
-// TODO request to force server listing?
+// The "/ws" endpoint is used to upgrade to websocket server
+// call with "ws://<localhost>:<config internalPort>/ws"
 
-export function start() {
+export function start(): Server {
   const server = app.listen(port);
   
   console.log("CrissCross guest API running on port", port);
+  return server;
 };
