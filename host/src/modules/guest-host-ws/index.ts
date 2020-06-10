@@ -9,7 +9,9 @@ import ws from "ws";
 import config from "config";
 
 // const sharedcache = require("../sharedcache");
-import * as messager from "../messager";
+// import * as messager from "../messager";
+
+import * as wsHadlers from "./ws-handlers";
 
 const wss = new ws.Server({ noServer: true });
 
