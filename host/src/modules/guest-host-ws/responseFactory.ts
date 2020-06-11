@@ -1,4 +1,5 @@
 // Template for generating a response
+// TODO this should be imported from the xxGuestAPI as messageFactory
 
 export default function responseBuilder(err: string | null, response?: object): string {
   if (err) {

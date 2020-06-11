@@ -43,18 +43,20 @@ files.forEach(file => {
 if (Object.getOwnPropertyNames(handlers).length === 0)
   console.log("No message handlers found");
 
-// Call workerHandlers() with payload and the master can send info to workers
-// { header, content, socket }
+
+// Send messages to the appropriate handlers
 export = function(ws: ws, payload) {
   // Problems
-
+  if (payload.status === 0) {
+    return console.error(`${hostname} - received error packet from ws:`, payload);
+  }
   if (!payload.header.hasOwnProperty("type")) {
     const msg = "Payload header has no message type";
 
     const response = responseFactory(msg);
     ws.send(response);
 
-    return console.error({ payload }, msg);
+    return console.error({ payload }, `${hostname} - ${msg}`);
   }
   if (!handlers.hasOwnProperty(payload.header.type)) {
     const msg = "No handler defined for message type";
@@ -62,7 +64,7 @@ export = function(ws: ws, payload) {
     const response = responseFactory(msg);
     ws.send(response);
 
-    return console.error({ payload }, msg);
+    return console.error({ payload }, `${hostname} - ${msg}`);
   }
 
   if (typeof handlers[payload.header.type] !== "function") {
@@ -71,12 +73,12 @@ export = function(ws: ws, payload) {
     const response = responseFactory(msg);
     ws.send(response);
 
-    return console.error({ handler: handlers[payload.header.type] }, msg);
+    return console.error({ handler: handlers[payload.header.type] }, `${hostname} - ${msg}`);
   }
 
   // We'll need to reply to the worker with the result of this event
   // console.log(`${hostname} - Calling handler for`, payload.header.type);
-  return handlers[payload.header.type](ws, payload, (err, results) => {
+  return handlers[payload.header.type](ws, payload, (err, type: string, results) => {
     if (err) {
       const msg = `${hostname} - Error in worker handler`;
     
@@ -87,8 +89,11 @@ export = function(ws: ws, payload) {
     }
     
     // Send the result to the client app
-    const response = responseFactory(null, results);
-    ws.send(response);
+    const response = responseFactory(null, {
+      ...results,
+      header: { type }
+    });
 
+    ws.send(response);
   });
 };
