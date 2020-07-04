@@ -7,7 +7,7 @@ module.exports.getAllServers = function(callback) {
     if (err) return callback(err);
 
     const servers = JSON.parse(stdout).list.map(s => {
-      s.ipv4 = s.ipv4[0];
+      s.address = s.ipv4[0];
       delete s.release;
       delete s.state;
       return s;

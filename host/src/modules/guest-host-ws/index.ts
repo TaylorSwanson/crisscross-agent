@@ -25,7 +25,7 @@ wss.on("connection", (ws, socket) => {
   ws.on("open", () => {
     console.log("A ws client has connected");
     
-    if (typeof wsClients === "undefined") wsClients = {};
+    if (typeof wsClients === "undefined") wsClients = [];
     wsClients.push({
       ws,
       socket
@@ -36,7 +36,7 @@ wss.on("connection", (ws, socket) => {
     console.log("A ws client has disconnected");
 
     // We need to remove the client from the pool of servers
-    if (typeof wsClients === "undefined") wsClients = {};
+    if (typeof wsClients === "undefined") wsClients = [];
     const idx = wsClients.findIndex(w => w.ws === ws);
 
     wsClients.splice(idx, 1);

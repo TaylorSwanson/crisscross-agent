@@ -41,11 +41,11 @@ files.forEach(file => {
 
 // Message when there's no registered handlers found
 if (Object.getOwnPropertyNames(handlers).length === 0)
-  console.log("No message handlers found");
+  console.log("No ws message handlers found");
 
 
 // Send messages to the appropriate handlers
-export = function(ws: ws, payload) {
+export default function(ws: ws, payload) {
   // Problems
   if (payload.status === 0) {
     return console.error(`${hostname} - received error packet from ws:`, payload);
@@ -59,7 +59,8 @@ export = function(ws: ws, payload) {
     return console.error({ payload }, `${hostname} - ${msg}`);
   }
   if (!handlers.hasOwnProperty(payload.header.type)) {
-    const msg = "No handler defined for message type";
+    const msg = `No handler defined for message type "${payload.header.type}". \
+See CrissCross guest API docs for supported handlers.`;
     
     const response = responseFactory(msg);
     ws.send(response);
@@ -68,7 +69,7 @@ export = function(ws: ws, payload) {
   }
 
   if (typeof handlers[payload.header.type] !== "function") {
-    const msg = "Handler is not a function";
+    const msg = "Internal CrissCross handler is not a function";
     
     const response = responseFactory(msg);
     ws.send(response);
@@ -78,9 +79,9 @@ export = function(ws: ws, payload) {
 
   // We'll need to reply to the worker with the result of this event
   // console.log(`${hostname} - Calling handler for`, payload.header.type);
-  return handlers[payload.header.type](ws, payload, (err, type: string, results) => {
+  return handlers[payload.header.type](ws, payload, (err: Error, type: string, results) => {
     if (err) {
-      const msg = `${hostname} - Error in worker handler`;
+      const msg = `${hostname} - Error in CrissCross worker handler`;
     
       const response = responseFactory(msg);
       ws.send(response);

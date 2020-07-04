@@ -36,8 +36,15 @@ for i in "${INSTANCENAMES[@]}"; do
   ) &
 done
 
+
 wait
 
-rm $BASEDIR/xxhost
+# Make sure we clean up
+function finish {
+  rm $BASEDIR/config.tar
+  rm $BASEDIR/xxhost
+}
+
+trap finish EXIT
 
 echo "Done - you need to restart network nodes"

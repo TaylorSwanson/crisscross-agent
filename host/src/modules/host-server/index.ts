@@ -44,7 +44,7 @@ export function start() {
       content: {
         name: hostname
       },
-    }, -1, (err) => {
+    }, messager.Timeout.None, (err) => {
       if (err) console.error(err);
     });
 

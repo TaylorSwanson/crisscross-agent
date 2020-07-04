@@ -31,6 +31,10 @@ interface OriginalMessageFormat {
   header
 };
 
+export enum Timeout {
+  None = -1
+}
+
 // Add a client stream, doesn't matter if it's a server or a client stream
 export function addClient(client: ClientDefinition): void {
 
@@ -105,7 +109,7 @@ export function messagePeer(
   socket: NodeJS.Socket,
   type: string,
   payload,
-  timeout: number,
+  timeout: number | Timeout,
   callback
 ): void {
 

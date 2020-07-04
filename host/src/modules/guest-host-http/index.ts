@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 
 // Default info route
 app.get("/", (req, res, next) => {
-  res.status(200).send("Guest API is working, call this API from your application");
+  res.status(200).send("Call this API from your application. See documentation for supported endpoints.");
 });
 
 // List servers in network
@@ -45,6 +45,6 @@ app.get("/servers", (req, res, next) => {
 export function start(): Server {
   const server = app.listen(port);
   
-  console.log("CrissCross guest API running on port", port);
+  console.log("CrissCross guest HTTP API running on port", port);
   return server;
 };

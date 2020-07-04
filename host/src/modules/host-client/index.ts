@@ -11,7 +11,7 @@ const xxp = require("xxp");
 
 const hostname = os.hostname().trim().toLowerCase();
 
-export function connectTo(host, port, callback) {
+export function connectTo(host: String, port: Number, callback: Function) {
   // Connect to a remote server
   const socket = net.createConnection(port, host, () => {
     console.log(`${hostname} - connecting to ${host}:${port}`);
@@ -43,8 +43,12 @@ export function connectTo(host, port, callback) {
       content: {
         name: hostname
       }
-    }, -1, (err) => {
-      if (err) return console.error(err);
+    }, messager.Timeout.None, (err) => {
+      if (err) {
+        callback(err);
+        return console.error(err);
+      }
+      callback(null, socket);
     });
   });
 
