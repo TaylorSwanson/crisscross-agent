@@ -137,7 +137,6 @@ export function messagePeer(
     // If not, we're done when the packet is sent
     if (timeout <= 0) {
       callback(null, emptyResult);
-      console.log("Timeout", timeout);
     } else {
 
       var timeoutId;
@@ -168,7 +167,6 @@ export function messagePeer(
       }, timeout);
 
       sharedcache.pendingRequestTimeouts[packetId] = timeoutId;
-      console.log("Timeouts", sharedcache.pendingRequestTimeouts);
     }
 
   });

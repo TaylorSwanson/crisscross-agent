@@ -30,8 +30,7 @@ export function getAllPeers(nodename: string, callback: Function) {
       timeout: 5000
     };
 
-    http.get(options, (res) => {
-      
+    http.get(options, res => {
       if (res.statusCode !== 200) {
         callback(`Received non-200 status when querying for servers: ${res.statusCode}`);
 
@@ -39,7 +38,6 @@ export function getAllPeers(nodename: string, callback: Function) {
         res.resume();
         return;
       }
-
 
       let data = "";
 
@@ -51,8 +49,9 @@ export function getAllPeers(nodename: string, callback: Function) {
         callback(null, JSON.parse(data));
       });
     }).on("timeout", err => {
-      callback("Server list request timed out - is the DO API spoof server running?");
+      callback("Server list request timed out - is the DO cloud-spoof server running?");
     }).on("error", err => {
+      if (err.message.indexOf("ETIMEDOUT") !== -1) return; // Prevent duplicate timeout messages
       callback(`Error with server list request: ${err}`);
     });
   } else {
