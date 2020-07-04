@@ -109,7 +109,7 @@ export function messagePeer(
   socket: NodeJS.Socket,
   type: string,
   payload,
-  timeout: number | Timeout,
+  timeout: number,
   callback
 ): void {
 
@@ -137,6 +137,7 @@ export function messagePeer(
     // If not, we're done when the packet is sent
     if (timeout <= 0) {
       callback(null, emptyResult);
+      console.log("Timeout", timeout);
     } else {
 
       var timeoutId;
@@ -158,17 +159,16 @@ export function messagePeer(
   
       // Save the pending request
       sharedcache.pendingRequests[packetId] = fnHandler;
-  
-      if (timeout !== -1) {
-        // User specified that the message should have a timeout
-        // Expire the response on timeout
-        timeoutId = setTimeout(() => {
-          // "timed out" must be in the error message
-          fnHandler(new Error(`${hostname} - Reply timed out: ${type} ${timeout}ms`), emptyResult);
-        }, timeout);
 
-        sharedcache.pendingRequestTimeouts[packetId] = timeoutId;
-      }
+      // User specified that the message should have a timeout
+      // Expire the response on timeout
+      timeoutId = setTimeout(() => {
+        // "timed out" must be in the error message
+        fnHandler(new Error(`${hostname} - Reply timed out: ${type} ${timeout}ms`), emptyResult);
+      }, timeout);
+
+      sharedcache.pendingRequestTimeouts[packetId] = timeoutId;
+      console.log("Timeouts", sharedcache.pendingRequestTimeouts);
     }
 
   });
@@ -211,7 +211,10 @@ export function messageAllPeers(
   timeout: number,
   callback
 ): void {
-  // console.log(`${hostname} - Messaging all peers:`, clientConnections.length);
+  if (!clientConnections.length)
+    return console.log("Cannot message all peers - none are available");
+  
+  console.log(`${hostname} - Messaging all peers:`, clientConnections.length);
 
   clientConnections.forEach(client => {
     // console.log(`${hostname} - sending one of many to ${client.name} type ${type}`);

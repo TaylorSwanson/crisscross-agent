@@ -8,6 +8,7 @@ import config from "config";
 
 import * as digitalocean from "digitalocean";
 
+// This is valid in the linux multipass servers
 const getGateway = "ip route show | grep 'default' | awk '{print $3}'";
 
 let doClient: any;
@@ -15,13 +16,31 @@ if (!config.has("useMultipass")) {
   doClient = digitalocean.client(process.env.DOTOKEN);
 }
 
-export function getAllServers(nodename: string, callback) {
+export function getAllPeers(nodename: string, callback: Function) {
   if (config.has("useMultipass")) {
     // We need to know the default gateway to connect to the spoof server
     const gateway = child_process.execSync(getGateway).toString("utf8").trim();
 
     // Make request to spoof server
-    http.get(`http://${gateway}:3334/servers`, (res) => {
+    const options = {
+      method: "GET",
+      path: "/servers",
+      host: gateway,
+      port: 3334,
+      timeout: 5000
+    };
+
+    http.get(options, (res) => {
+      
+      if (res.statusCode !== 200) {
+        callback(`Received non-200 status when querying for servers: ${res.statusCode}`);
+
+        // Consume response data to free up memory
+        res.resume();
+        return;
+      }
+
+
       let data = "";
 
       res.on("data", chunk => {
@@ -30,8 +49,12 @@ export function getAllServers(nodename: string, callback) {
 
       res.on("end", () => {
         callback(null, JSON.parse(data));
-      })
-    }).on("error", (err) => { callback(err) });
+      });
+    }).on("timeout", err => {
+      callback("Server list request timed out - is the DO API spoof server running?");
+    }).on("error", err => {
+      callback(`Error with server list request: ${err}`);
+    });
   } else {
 
     doClient.droplets.list((err, droplets) => {

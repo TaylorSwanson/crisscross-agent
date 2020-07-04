@@ -22,11 +22,12 @@ import * as groupTimer from "./modules/group-timer";
 
 // const packetFactory = require("xxp").packetFactory;
 
+// Operate out of the home directory of the server
 const homedir = os.homedir();
 const hostname = os.hostname().trim().toLowerCase();
 process.chdir(homedir);
 
-// Load the config
+// Load the config from the designated application directory
 let configPath = path.join(homedir, "application", "xx.json");
 
 // Use specific application directory, useful for dev
@@ -57,25 +58,41 @@ keys.forEach(key => {
 sharedcache["processid"] = crypto.randomBytes(4).toString("hex");
 
 // Init server setup
-// TODO load server layout with DOAPI
 hostserver.start();
 
-serverApi.getAllServers("", (err, nodes) => {
-  console.log(`Found ${nodes.length} servers:`, nodes);
-  let connectablePeers = nodes.filter(n => n.hasOwnProperty("ipv4"));
-
-  // Filter ourselves
-  connectablePeers = connectablePeers.filter(n => n.name != hostname);
-
-  console.log(`Of those servers, ${connectablePeers.length} are connectable`);
-
-  // Connect as client to existing servers
-  connectablePeers.forEach(p => {
-    //@ts-ignore
-    hostclient.connectTo(p.ipv4, config.port, () => {});
+// This gets peers from multipass or the DO API, depending on environment
+// This can fail locally if the spoof server isn't running
+// It can fail in prod if the DO API is unavailable
+// If DOAPI lists no servers but no err, then we'll wait for clients (we're alone)
+// If we get an error we will indefinitely retry asking the API for peers
+function tryGettingPeers() {
+  serverApi.getAllPeers("", (err, nodes) => {
+    if (err) {
+      console.error(`${hostname} - Could not list peers:`, err);
+      console.log(`${hostname} - Retrying in 5 minutes since the API seems to be down`);
+  
+      return setTimeout(tryGettingPeers, 1000 * 60 * 5);
+    }
+  
+    console.log(`${hostname} - Found ${nodes.length} servers:`, nodes);
+    let connectablePeers = nodes.filter(n => n.hasOwnProperty("ipv4"));
+  
+    // Filter ourselves out
+    connectablePeers = connectablePeers.filter(n => n.name != hostname);
+  
+    console.log(`${hostname} - Of those servers, ${connectablePeers.length} are connectable`);
+  
+    // Connect as client to existing servers
+    connectablePeers.forEach(p => {
+      //@ts-ignore
+      hostclient.connectTo(p.ipv4, config.port, () => {});
+    });
   });
-});
+}
 
+// Recursively attempt to check for servers
+// If the API is down it will continue to check until there is no error
+tryGettingPeers();
 
 // Start the http host that the guest application can connect to
 const httpServer = guesthosthttp.start();
