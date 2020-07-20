@@ -14,8 +14,7 @@ import config from "config";
 import * as hostserver from "./modules/host-server";
 import sharedcache from "./modules/sharedcache";
 import * as hostclient from "./modules/host-client";
-import * as guesthosthttp from "./modules/guest-host-http";
-import * as guesthostws from "./modules/guest-host-ws";
+import * as guesthostzmq from "./modules/guest-host-zmq";
 import * as serverApi from "./modules/server-api";
 import * as aliveWatcher from "./modules/alive-watcher";
 import * as groupTimer from "./modules/group-timer";
@@ -94,10 +93,7 @@ function tryGettingPeers() {
 // If the API is down it will continue to check until there is no error
 tryGettingPeers();
 
-// Start the http host that the guest application can connect to
-const httpServer = guesthosthttp.start();
-// Start the ws host that the guest application can connect to
-guesthostws.start(httpServer);
+guesthostzmq.start();
 
 // Start keepalive watcher
 groupTimer.randomTimer("alive", 60, 10, aliveWatcher.keepAliveFunction);

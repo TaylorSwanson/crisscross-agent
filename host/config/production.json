@@ -1,5 +1,6 @@
 {
   "suffix": "prod",
   "port": 1025,
+  "reqPort": 1026,
   "internalPort": 15001
 }

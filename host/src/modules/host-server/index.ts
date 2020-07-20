@@ -2,7 +2,7 @@
 // Newer peers connect to this server as clients, this server connects as a
 // client to older peers
 
-import net from "net";
+import net, { Server } from "net";
 import os from "os";
 
 import config from "config";
@@ -11,10 +11,12 @@ import sharedcache from "../sharedcache";
 import * as messager from "../messager";
 import messageHandler from "../../message-handlers";
 
-const packetDecoder = require("xxp").packetDecoder;
-const packetFactory = require("xxp").packetFactory;
+// const packetDecoder = require("xxp").packetDecoder;
+// const packetFactory = require("xxp").packetFactory;
 
-let server;
+import { packetDecoder } from "xxp";
+
+let server: Server;
 
 const activeSockets = {};
 
@@ -52,7 +54,7 @@ export function start() {
     
     // Client dropped out
     socket.on("end", () => {
-      //@ts-ignore
+      // @ts-ignore
       console.log(`${hostname} - client at ${socket.address().address} ended connection`);
 
       messager.removeClient({

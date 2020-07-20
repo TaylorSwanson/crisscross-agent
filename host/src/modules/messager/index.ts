@@ -3,7 +3,7 @@
 
 import os from "os";
 
-import async from "async";
+// import async from "async";
 
 const xxp = require("xxp");
 import sharedcache from "../sharedcache";
@@ -27,8 +27,8 @@ interface ClientAddresses {
 
 interface OriginalMessageFormat {
   socket: NodeJS.Socket,
-  content,
-  header
+  content: any,
+  header: { [x: string]: any; }
 };
 
 export enum Timeout {
@@ -108,7 +108,7 @@ export function getAllConnectionAddresses(): ClientAddresses[] {
 export function messagePeer(
   socket: NodeJS.Socket,
   type: string,
-  payload,
+  payload: { header: { [x: string]: any; }; content: any; },
   timeout: number,
   callback
 ): void {
@@ -184,7 +184,7 @@ export function messagePeer(
 // Does all the response header work for us
 export function replyToPeer(
   originalMessage: OriginalMessageFormat,
-  payload,
+  payload: { header: { [x: string]: any; }; content: any; },
   timeout: number,
   callback
 ) {
@@ -205,7 +205,7 @@ export function replyToPeer(
 // If wait > 0, the timeout is number of ms to timeout
 export function messageAllPeers(
   type: string,
-  payload,
+  payload: { header: { [x: string]: any; }; content: any; },
   timeout: number,
   callback
 ): void {
@@ -222,7 +222,7 @@ export function messageAllPeers(
 
 export function askAllPeers(
   type: string,
-  payload,
+  payload: { header: { [x: string]: any; }; content: any; },
   timeout: number,
   callback
 ): void {

@@ -1,7 +1,7 @@
 // This module helps communicate with the peers by connecting to their servers
 
-const net = require("net");
-const os = require("os");
+import net from "net";
+import os from "os";
 
 const sharedcache = require("../sharedcache");
 import * as messager from "../messager";
@@ -11,7 +11,7 @@ const xxp = require("xxp");
 
 const hostname = os.hostname().trim().toLowerCase();
 
-export function connectTo(host: String, port: Number, callback: Function) {
+export function connectTo(host: string, port: number, callback: Function) {
   // Connect to a remote server
   const socket = net.createConnection(port, host, () => {
     console.log(`${hostname} - connecting to ${host}:${port}`);
@@ -25,7 +25,7 @@ export function connectTo(host: String, port: Number, callback: Function) {
   });
 
   socket.on("error", err => {
-    if (err.code == "ECONNREFUSED") {
+    if (err.message.includes("ECONNREFUSED")) {
       return console.log(`${hostname} - not available as host: ${host}:${port}`);
     }
     console.log(`${hostname} - other error on ${host}:${port}`, err);
