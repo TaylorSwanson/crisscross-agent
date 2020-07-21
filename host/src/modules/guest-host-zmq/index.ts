@@ -1,6 +1,5 @@
 // We communicate network details to the guest application through this
 // interface
-// Call the /ws endpoint of the main http server to upgrade
 
 import url from "url";
 
@@ -16,7 +15,8 @@ const reqresSock = new zmq.Reply;
 const events = pubsubSock.events;
 let isBound = false;
 
-// Start the ws server on the existing http server
+// Start the zmq servers, one for pub/sub and one for handling requests
+// Each has its own port, see configs
 export async function start() {
   await pubsubSock.bind(`tcp://127.0.0.1:${config.get("port")}`);
   await reqresSock.bind(`tcp://127.0.0.1:${config.get("reqPort")}`);
