@@ -3,11 +3,10 @@
 import net from "net";
 import os from "os";
 
-const sharedcache = require("../sharedcache");
 import * as messager from "../messager";
-const messageHandler = require("../../message-handlers");
+const messageHandler = require("../../xxp-message-handlers");
 
-const xxp = require("xxp");
+import xxp from "xxp";
 
 const hostname = os.hostname().trim().toLowerCase();
 

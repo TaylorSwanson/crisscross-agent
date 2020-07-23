@@ -19,6 +19,7 @@ chmod +x $BASEDIR/xxhost
 
 cd $BASEDIR
 
+# Move config as one file, unpack on machine
 tar -cf config.tar ./config
 
 
@@ -47,4 +48,4 @@ function finish {
 
 trap finish EXIT
 
-echo "Done - you need to restart network nodes"
+echo "Done - you need to restart the nodes to see the changes"

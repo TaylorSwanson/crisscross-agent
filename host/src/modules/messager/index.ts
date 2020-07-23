@@ -108,7 +108,7 @@ export function getAllConnectionAddresses(): ClientAddresses[] {
 export function messagePeer(
   socket: NodeJS.Socket,
   type: string,
-  payload: { header: { [x: string]: any; }; content: any; },
+  payload,
   timeout: number,
   callback
 ): void {
@@ -184,7 +184,7 @@ export function messagePeer(
 // Does all the response header work for us
 export function replyToPeer(
   originalMessage: OriginalMessageFormat,
-  payload: { header: { [x: string]: any; }; content: any; },
+  payload,
   timeout: number,
   callback
 ) {
@@ -205,7 +205,7 @@ export function replyToPeer(
 // If wait > 0, the timeout is number of ms to timeout
 export function messageAllPeers(
   type: string,
-  payload: { header: { [x: string]: any; }; content: any; },
+  payload,
   timeout: number,
   callback
 ): void {
@@ -222,7 +222,7 @@ export function messageAllPeers(
 
 export function askAllPeers(
   type: string,
-  payload: { header: { [x: string]: any; }; content: any; },
+  payload,
   timeout: number,
   callback
 ): void {

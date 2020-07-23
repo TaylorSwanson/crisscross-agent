@@ -81,3 +81,17 @@ features. Clone it to somewhere in your dev environment and point the
 
 See the `crisscross-example-project` repo here:
 https://github.com/TaylorSwanson/crisscross-example-project
+
+# How the app manages executables
+A single executable file is created called `xxhost` which is distributed to each
+node and has no dependencies, since node is packed inside.
+
+## Development process
+- Start multipass instances in a cluster, use `addCluster.sh <number>`. On
+some occasions this will not work because of a socket error, try again and it
+should work.
+- To load the files initially, execute `runAgain.sh`
+- On changes, run `runAgain.sh`
+- Once done, clean up the cluster by running `deleteAllNodes.sh` or pause all
+instances by running `stopAllNodes.sh`. Deleting nodes requires you to create
+the cluster again.

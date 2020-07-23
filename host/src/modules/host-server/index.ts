@@ -9,7 +9,7 @@ import config from "config";
 
 import sharedcache from "../sharedcache";
 import * as messager from "../messager";
-import messageHandler from "../../message-handlers";
+import messageHandler from "../../xxp-message-handlers";
 
 // const packetDecoder = require("xxp").packetDecoder;
 // const packetFactory = require("xxp").packetFactory;

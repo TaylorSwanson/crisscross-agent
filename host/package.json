@@ -5,8 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "node -r source-map-support/register ./dist/index.js",
-    "build-ts": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-ts": "tsc"
   },
   "author": "Taylor Swanson",
   "license": "MIT",
@@ -17,7 +16,8 @@
     "fs-extra": "^9.0.0",
     "line-reader": "^0.4.0",
     "nodegit": "^0.26.5",
-    "xxp": "github:TaylorSwanson/xxp"
+    "xxp": "github:TaylorSwanson/xxp",
+    "zeromq": "^6.0.0-beta.6"
   },
   "devDependencies": {
     "@types/async": "^3.2.3",
