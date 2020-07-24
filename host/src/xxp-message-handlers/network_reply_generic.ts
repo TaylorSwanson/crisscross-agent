@@ -35,7 +35,6 @@ module.exports = function({ header, content, socket }) {
     throw new Error("Network reply callback must be a function");
 
   cbFunction(null, { header, content, socket });
-  delete sharedcache.pendingRequests[responseToId];
   
   // Clear any timeouts for this request
   // console.log(`${hostname} - pending keys`, Object.keys(sharedcache.pendingRequestTimeouts));

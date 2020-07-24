@@ -40,15 +40,15 @@ export function start() {
 
     // console.log(`${hostname} - asking client to idenfify, sending name`)
 
-    // Identify to the client who we are
-    messager.messagePeer(socket, "network_handshake_identify", {
-      header: {},
-      content: {
-        name: hostname
-      },
-    }, messager.Timeout.None, (err) => {
-      if (err) console.error(err);
-    });
+    // // Identify to the client who we are
+    // messager.messagePeer(socket, "network_handshake_identify", {
+    //   header: {},
+    //   content: {
+    //     name: hostname
+    //   },
+    // }, messager.Timeout.None, (err) => {
+    //   if (err) console.error(err);
+    // });
 
     //
     

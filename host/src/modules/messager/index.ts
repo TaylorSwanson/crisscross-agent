@@ -15,7 +15,6 @@ const hostname = os.hostname().trim().toLowerCase();
 // sharedcache.clientConnections = [];
 // const clientConnections = sharedcache.clientConnections;
 const clientConnections = [];
-let availablePeers = [];
 
 interface ClientDefinition {
   socket: NodeJS.Socket,
@@ -132,12 +131,11 @@ export function messagePeer(
   }
 
   // console.log(`${hostname} - Sending packet: ${packet.packet.toString("utf8")}`);
+  const emptyResult = { header: null, content: null, socket };
   
   // Start sending the packet
   socket.write(packet.packet, function() {
     // console.log(`${hostname} - ${type} packet sent\n`);
-
-    const emptyResult = { header: null, content: null, socket };
 
     // Determine if we timeout or not
     // If not, we're done when the packet is sent
@@ -154,7 +152,11 @@ export function messagePeer(
           clearTimeout(timeoutId);
   
           // Callback would receive (err, { header, content, socket });
-          callback(err, emptyResult);
+          callback(err, {
+            socket: sockDetails.socket,
+            header: sockDetails.header,
+            content: sockDetails.content
+          });
           // Remove this handler to prevent duplicate callbacks
           delete sharedcache.pendingRequests[packetId];
           // Prevent memory leak? (necessary?)
@@ -226,14 +228,14 @@ export function messageAllPeers(
   });
 };
 
-export function askAllPeers(
-  type: string,
-  payload,
-  timeout: number,
-  callback
-): void {
+// export function askAllPeers(
+//   type: string,
+//   payload,
+//   timeout: number,
+//   callback
+// ): void {
   
-};
+// };
 
 
 // This gets peers from multipass or the DO API, depending on environment
@@ -241,7 +243,7 @@ export function askAllPeers(
 // It can fail in prod if the DO API is unavailable
 // If DOAPI lists no servers but no err, then we'll wait for clients (we're alone)
 // If we get an error we will indefinitely retry asking the API for peers
-export function getPeers() {
+export function getPeers(callback): void {
   serverApi.getAllPeers("", (err, nodes) => {
     if (err) {
       console.error(`${hostname} - Could not list peers:`, err);
@@ -259,26 +261,55 @@ export function getPeers() {
     console.log(`${hostname} - Of those servers, ${connectablePeers.length} are \
 connectable:`, connectablePeers);
 
-    availablePeers = connectablePeers;
-
-    connectToPeers();
+    return callback(null, connectablePeers);
   });
-}
-
-
-// Connects to initial peers
-export function connectToPeers(): void {
-  const peers = availablePeers;
-  peers.forEach(peer => {
-    if (isPeerAClientAlready(peer.address))
-      return console.log(`${peer.address} is already a client`);
-
-    hostClient.connectTo(peer.address, config.get("internalPort"), () => {});
-  })
 };
 
-// Returns if a peer is already a client of the server
-export function isPeerAClientAlready(address): boolean {
-  console.log("ad", address);
-  return getAllConnectionAddresses().some(c => c.address === address);
+
+// Tell the other server to be the client
+function tellOtherToConnectToMe(socket, callback) {
+
+};
+
+// We're going to connect as a client to every server and ask for uptime
+export function start() {
+  getPeers((err, peers) => {
+    peers.forEach(peer => {
+      hostClient.connectTo(peer.address, config.get("internalPort"), (err, socket) => {
+        // Send message to ask for uptime
+        messagePeer(socket, "network_ask_uptime", {
+          header: {},
+          content: {}
+        }, 5000, (err, response) => {
+          if (err) throw err;
+          
+          const myUptime = new Date().getTime() - sharedcache["starttime"];
+          const theirUptime = response.content.uptime;
+
+          console.log(`${hostname} - Peer uptime is ${theirUptime}`);
+          console.log(`${hostname} - My uptime is ${myUptime}`);
+
+
+          if (theirUptime > myUptime) {
+            console.log(`${hostname} - I'll be the client`);
+            // Pass details to client listener
+            hostClient.connectTo(socket.address().address, config.get("internalPort"), (err, newSocket) => {
+              // Destroy this original socket since a new one has been established
+              socket.end();
+              socket.destroy();
+            });
+          } else {
+            console.log(`${hostname} - I'll be the server`);
+
+            tellOtherToConnectToMe(socket, () => {
+              // We won't talk this way anymore
+              socket.end();
+              socket.destroy();
+            })
+          }
+        });
+      });
+    });
+  });
+
 };

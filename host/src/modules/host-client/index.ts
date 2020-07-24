@@ -10,6 +10,7 @@ import xxp from "xxp";
 
 const hostname = os.hostname().trim().toLowerCase();
 
+// Connects just to a host server
 export function connectTo(host: string, port: number, callback: Function) {
   // Don't connect if we are already connected to this server as a client
   const connected = messager.getAllConnectionAddresses();
@@ -41,18 +42,20 @@ export function connectTo(host: string, port: number, callback: Function) {
     xxp.packetDecoder(socket, messageHandler);
 
     // Identify to the server who we are
-    messager.messagePeer(socket, "network_handshake_identify", {
-      header: {},
-      content: {
-        name: hostname
-      }
-    }, messager.Timeout.None, (err) => {
-      if (err) {
-        callback(err);
-        return console.error(err);
-      }
-      callback(null, socket);
-    });
+    // messager.messagePeer(socket, "network_handshake_identify", {
+    //   header: {},
+    //   content: {
+    //     name: hostname
+    //   }
+    // }, messager.Timeout.None, (err) => {
+    //   if (err) {
+    //     callback(err);
+    //     return console.error(err);
+    //   }
+    //   callback(null, socket);
+    // });
+
+    callback(null, socket);
   });
 
 };

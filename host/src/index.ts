@@ -55,13 +55,15 @@ process.chdir(homedir);
 
 // Give this instance a random name for the process (not hostname or actual PID)
 sharedcache["processid"] = crypto.randomBytes(4).toString("hex");
+// We need uptime in ms
+sharedcache["starttime"] = new Date().getTime();
 
 // Init server setup
 hostserver.start();
 
 // Attempt to check for servers
 // If the API is down it will recursively continue to check until there is no error
-messager.getPeers();
+messager.start();
 
 // guestServer.start();
 
