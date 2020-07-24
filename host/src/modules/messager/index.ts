@@ -3,17 +3,19 @@
 
 import os from "os";
 
-// import async from "async";
-
 const xxp = require("xxp");
+import config from "config";
+
+import * as serverApi from "../server-api";
+import * as hostClient from "../host-client";
 import sharedcache from "../sharedcache";
-import { LooseStringObject } from "xxp";
 
 const hostname = os.hostname().trim().toLowerCase();
 
 // sharedcache.clientConnections = [];
 // const clientConnections = sharedcache.clientConnections;
 const clientConnections = [];
+let availablePeers = [];
 
 interface ClientDefinition {
   socket: NodeJS.Socket,
@@ -38,8 +40,10 @@ export enum Timeout {
 // Add a client stream, doesn't matter if it's a server or a client stream
 export function addClient(client: ClientDefinition): void {
 
+  if (clientConnections.some(c => c.name === hostname)) return;
+
   if (clientConnections.some(c => c.name === client.name)) {
-    return console.warn("Client was already added to the messager:", client.name);
+    return console.warn(hostname, "-", "Client was already added to the messager:", client.name);
   }
 
   console.log(`${hostname} - adding client: ${client.name}`);
@@ -112,6 +116,8 @@ export function messagePeer(
   timeout: number,
   callback
 ): void {
+
+  console.log(`${hostname} - Message across xxp - ${type}`)
 
   const packet = xxp.packetFactory.newPacket({
     header: { type, ...payload.header }, content: payload.content
@@ -227,4 +233,52 @@ export function askAllPeers(
   callback
 ): void {
   
+};
+
+
+// This gets peers from multipass or the DO API, depending on environment
+// This can fail locally if the spoof server isn't running
+// It can fail in prod if the DO API is unavailable
+// If DOAPI lists no servers but no err, then we'll wait for clients (we're alone)
+// If we get an error we will indefinitely retry asking the API for peers
+export function getPeers() {
+  serverApi.getAllPeers("", (err, nodes) => {
+    if (err) {
+      console.error(`${hostname} - Could not list peers:`, err);
+      console.log(`${hostname} - Retrying in 5 minutes since the API seems to be down`);
+  
+      return setTimeout(getPeers, 1000 * 60 * 5);
+    }
+  
+    console.log(`${hostname} - Found ${nodes.length} servers:`, nodes);
+    let connectablePeers = nodes.filter(n => n.hasOwnProperty("ipv4"));
+  
+    // Filter ourselves out
+    connectablePeers = connectablePeers.filter(n => n.name !== hostname);
+  
+    console.log(`${hostname} - Of those servers, ${connectablePeers.length} are \
+connectable:`, connectablePeers);
+
+    availablePeers = connectablePeers;
+
+    connectToPeers();
+  });
+}
+
+
+// Connects to initial peers
+export function connectToPeers(): void {
+  const peers = availablePeers;
+  peers.forEach(peer => {
+    if (isPeerAClientAlready(peer.address))
+      return console.log(`${peer.address} is already a client`);
+
+    hostClient.connectTo(peer.address, config.get("internalPort"), () => {});
+  })
+};
+
+// Returns if a peer is already a client of the server
+export function isPeerAClientAlready(address): boolean {
+  console.log("ad", address);
+  return getAllConnectionAddresses().some(c => c.address === address);
 };

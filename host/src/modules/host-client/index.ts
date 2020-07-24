@@ -11,6 +11,10 @@ import xxp from "xxp";
 const hostname = os.hostname().trim().toLowerCase();
 
 export function connectTo(host: string, port: number, callback: Function) {
+  // Don't connect if we are already connected to this server as a client
+  const connected = messager.getAllConnectionAddresses();
+  if (connected.some(c => c.address == host)) return;
+
   // Connect to a remote server
   const socket = net.createConnection(port, host, () => {
     console.log(`${hostname} - connecting to ${host}:${port}`);
@@ -31,7 +35,7 @@ export function connectTo(host: string, port: number, callback: Function) {
   });
 
   socket.on("ready", () => {
-    // console.log(`${hostname} - ready to talk to server ${host}:${port}, registering handlers`);
+    console.log(`${hostname} - client to ${host}:${port}, registering handlers`);
 
     // This lets the server handle incoming messages with the message handlers
     xxp.packetDecoder(socket, messageHandler);

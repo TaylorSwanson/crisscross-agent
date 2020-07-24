@@ -29,7 +29,7 @@ files.forEach(file => {
   // Save method to the respective handler
   handlers[handlerName] = require(handlerPath);
 
-  console.log(`Registered guest handler: ${handlerName}`);
+  // console.log(`Registered guest handler: ${handlerName}`);
 });
 
 // Message when there's no registered handlers found
