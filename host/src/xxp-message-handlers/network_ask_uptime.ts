@@ -6,6 +6,8 @@ const xxp = require("xxp");
 
 module.exports = function({ header, content, socket }) {
 
+  console.log("Received uptime request");
+
   const packet = xxp.packetFactory.newPacket({
     header: {
       type: "network_reply_generic",

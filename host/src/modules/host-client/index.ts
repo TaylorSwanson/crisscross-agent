@@ -1,6 +1,6 @@
 // This module helps communicate with the peers by connecting to their servers
 
-import net from "net";
+import net, { Socket } from "net";
 import os from "os";
 
 import * as messager from "../messager";
@@ -33,29 +33,16 @@ export function connectTo(host: string, port: number, callback: Function) {
       return console.log(`${hostname} - not available as host: ${host}:${port}`);
     }
     console.log(`${hostname} - other error on ${host}:${port}`, err);
+
+    socket.destroy();
   });
 
   socket.on("ready", () => {
-    console.log(`${hostname} - client to ${host}:${port}, registering handlers`);
+    console.log(`${hostname} - I'm a client to ${host}:${port}, registering handlers`);
 
     // This lets the server handle incoming messages with the message handlers
     xxp.packetDecoder(socket, messageHandler);
 
-    // Identify to the server who we are
-    // messager.messagePeer(socket, "network_handshake_identify", {
-    //   header: {},
-    //   content: {
-    //     name: hostname
-    //   }
-    // }, messager.Timeout.None, (err) => {
-    //   if (err) {
-    //     callback(err);
-    //     return console.error(err);
-    //   }
-    //   callback(null, socket);
-    // });
-
     callback(null, socket);
   });
-
 };

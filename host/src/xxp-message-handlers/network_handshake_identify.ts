@@ -13,8 +13,8 @@ const hostname = os.hostname().trim().toLowerCase();
 
 module.exports = function({ header, content, socket }) {
 
-//   console.log(`${hostname} - client at ${socket.address().address} identified \
-// as ${content.name}`);
+  console.log(`${hostname} - client at ${socket.address().address} identified \
+as ${content.name}`);
 
   messager.addClient({
     socket: socket,

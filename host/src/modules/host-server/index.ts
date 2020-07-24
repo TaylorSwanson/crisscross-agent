@@ -23,44 +23,42 @@ const activeSockets = {};
 const port = config.get("internalPort");
 const hostname = os.hostname().trim().toLowerCase();
 
+
+function askOtherToIdentify(socket) {
+  // Identify to the server who we are
+  messager.messagePeer(socket, "network_handshake_identify", {
+    header: {},
+    content: {
+      name: hostname
+    }
+  }, messager.Timeout.None, (err) => {
+    if (err) {
+      console.error(err);
+    }
+  });
+};
+
 export function start() {
   console.log(`${hostname} - Starting host server`, hostname);
 
   server = net.createServer(socket => {
+    const localAddress = socket.localAddress;
     console.log(`${hostname} - A client connected`);
     // Client connected
     
-    //@ts-ignore
-    const ipv4 = socket.address().address;
-    console.log(`${hostname} - server to ${ipv4}, registering handlers`);
+    console.log(`${hostname} - I'm a server to ${localAddress}, registering handlers`);
 
     // This lets the server handle incoming messages with the message handlers
     packetDecoder(socket, messageHandler);
-    
 
-    // console.log(`${hostname} - asking client to idenfify, sending name`)
-
-    // // Identify to the client who we are
-    // messager.messagePeer(socket, "network_handshake_identify", {
-    //   header: {},
-    //   content: {
-    //     name: hostname
-    //   },
-    // }, messager.Timeout.None, (err) => {
-    //   if (err) console.error(err);
-    // });
-
-    //
+    // Add as client
+    askOtherToIdentify(socket);
     
     // Client dropped out
     socket.on("end", () => {
-      // @ts-ignore
-      console.log(`${hostname} - client at ${socket.address().address} ended connection`);
+      console.log(`${hostname} - client at ${localAddress} disconnected`);
 
-      messager.removeClient({
-        socket,
-        name: null
-      });
+      messager.removeClientBySocket(socket);
 
       socket.end(null);
     });

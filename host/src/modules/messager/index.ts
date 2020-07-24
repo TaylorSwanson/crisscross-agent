@@ -9,12 +9,16 @@ import config from "config";
 import * as serverApi from "../server-api";
 import * as hostClient from "../host-client";
 import sharedcache from "../sharedcache";
+import { Socket } from "net";
 
 const hostname = os.hostname().trim().toLowerCase();
 
 // sharedcache.clientConnections = [];
 // const clientConnections = sharedcache.clientConnections;
 const clientConnections = [];
+
+// Keep track of which sockets are servers
+const serverSockets: Array<Socket> = [];
 
 interface ClientDefinition {
   socket: NodeJS.Socket,
@@ -27,7 +31,7 @@ interface ClientAddresses {
 };
 
 interface OriginalMessageFormat {
-  socket: NodeJS.Socket,
+  socket: Socket | NodeJS.Socket,
   content: any,
   header: { [x: string]: any; }
 };
@@ -77,9 +81,7 @@ export function getClient(identifier: NodeJS.Socket | string): ClientDefinition 
 export function removeClientByName(clientName: string): void {
   const idx = clientConnections.findIndex(c => c.name == clientName);
 
-  if (idx === -1) {
-    return console.log("Cannot remove non-existing client:", clientName);
-  }
+  if (idx === -1) return;
 
   clientConnections.splice(idx, 1);
 };
@@ -87,9 +89,7 @@ export function removeClientByName(clientName: string): void {
 export function removeClientBySocket(socket: NodeJS.Socket): void {
   const idx = clientConnections.findIndex(c => c.socket == socket);
 
-  if (idx === -1) {
-    return console.log("Cannot remove non-existing client with socket:", socket);
-  }
+  if (idx === -1) return;
 
   clientConnections.splice(idx, 1);
 };
@@ -97,7 +97,7 @@ export function removeClientBySocket(socket: NodeJS.Socket): void {
 // Get list of all connected ip addresses
 export function getAllConnectionAddresses(): ClientAddresses[] {
   return clientConnections.map(c => ({
-    address: c.socket.address().address,
+    address: c.localAddress,
     name: c.name
   }));
 };
@@ -109,12 +109,16 @@ export function getAllConnectionAddresses(): ClientAddresses[] {
 
 // If timeout is <= 0 then there will be no additional response headers
 export function messagePeer(
-  socket: NodeJS.Socket,
+  socket: Socket,
   type: string,
   payload,
   timeout: number,
   callback
 ): void {
+
+  if (!socket || socket.destroyed) {
+    return callback("No socket");
+  }
 
   console.log(`${hostname} - Message across xxp - ${type}`)
 
@@ -196,6 +200,7 @@ export function replyToPeer(
   timeout: number,
   callback
 ) {
+  // @ts-ignore
   messagePeer(originalMessage.socket, "network_reply_generic", {
     header: {
       "xxp__responseto": originalMessage.header["xxp__packetid"],
@@ -252,14 +257,14 @@ export function getPeers(callback): void {
       return setTimeout(getPeers, 1000 * 60 * 5);
     }
   
-    console.log(`${hostname} - Found ${nodes.length} servers:`, nodes);
+    // console.log(`${hostname} - Found ${nodes.length} servers:`, nodes);
     let connectablePeers = nodes.filter(n => n.hasOwnProperty("ipv4"));
   
     // Filter ourselves out
     connectablePeers = connectablePeers.filter(n => n.name !== hostname);
   
-    console.log(`${hostname} - Of those servers, ${connectablePeers.length} are \
-connectable:`, connectablePeers);
+//     console.log(`${hostname} - Of those servers, ${connectablePeers.length} are \
+// connectable:`, connectablePeers);
 
     return callback(null, connectablePeers);
   });
@@ -271,48 +276,90 @@ function tellOtherToConnectToMe(socket, callback) {
   messagePeer(socket, "network_connect_to_me", {
     header: {},
     content: {}
-  }, 1000, callback);
+  }, Timeout.None, callback);
 };
+
+function askOtherToIdentify(socket) {
+  // Identify to the server who we are
+  messagePeer(socket, "network_handshake_identify", {
+    header: {},
+    content: {
+      name: hostname
+    }
+  }, Timeout.None, (err) => {
+    if (err) {
+      console.error(err);
+    }
+  });
+};
+
+function attemptToConnectToPeer(peer) {
+  hostClient.connectTo(peer.address, config.get("internalPort"), (err, socket) => {
+    // Send message to ask for uptime
+    messagePeer(socket, "network_ask_uptime", {
+      header: {},
+      content: {}
+    }, 2000, (err, response) => {
+      if (err) {
+        console.log("err", err);
+        // Throw away socket, try again
+        socket.destroy();
+
+        attemptToConnectToPeer(peer);
+        return;
+      }
+      
+      const myUptime = new Date().getTime() - sharedcache["starttime"];
+      const theirUptime = response.content.uptime;
+
+      console.log(`${hostname} - Peer uptime is ${theirUptime}`);
+      console.log(`${hostname} - My uptime is ${myUptime}`);
+
+
+      if (theirUptime > myUptime) {
+        console.log(`${hostname} - I'll be the client`);
+        
+        // Send handshake now, we'll add them as a client
+        askOtherToIdentify(socket);
+
+        serverSockets.push(socket);
+
+      } else {
+        // Rare case where this server got disconnected and then reconnected
+
+        console.log(`${hostname} - I'll be the server`);
+
+        tellOtherToConnectToMe(socket, () => {
+          // We won't talk this way anymore
+          // Handshake will occur once they connect
+          socket.end();
+          socket.destroy();
+
+        });
+      }
+    });
+  });
+}
+
+function isCLientAServer(socket: Socket): boolean {
+  return serverSockets.includes(socket);
+}
 
 // We're going to connect as a client to every server and ask for uptime
 export function start() {
   getPeers((err, peers) => {
     peers.forEach(peer => {
-      hostClient.connectTo(peer.address, config.get("internalPort"), (err, socket) => {
-        // Send message to ask for uptime
-        messagePeer(socket, "network_ask_uptime", {
-          header: {},
-          content: {}
-        }, 5000, (err, response) => {
-          if (err) throw err;
-          
-          const myUptime = new Date().getTime() - sharedcache["starttime"];
-          const theirUptime = response.content.uptime;
-
-          console.log(`${hostname} - Peer uptime is ${theirUptime}`);
-          console.log(`${hostname} - My uptime is ${myUptime}`);
-
-
-          if (theirUptime > myUptime) {
-            console.log(`${hostname} - I'll be the client`);
-            // Pass details to client listener
-            hostClient.connectTo(socket.address().address, config.get("internalPort"), (err, newSocket) => {
-              // Destroy this original socket since a new one has been established
-              socket.end();
-              socket.destroy();
-            });
-          } else {
-            console.log(`${hostname} - I'll be the server`);
-
-            tellOtherToConnectToMe(socket, () => {
-              // We won't talk this way anymore
-              socket.end();
-              socket.destroy();
-            });
-          }
-        });
-      });
+      attemptToConnectToPeer(peer);
     });
   });
+
+
+  setTimeout(() => {
+    // List connections
+    clientConnections.forEach(cc => {
+      const isServerString = !isCLientAServer(cc.socket) ? "Server" : "Client";
+      console.log(`${hostname} - Connected to ${cc.name} as a ${isServerString}`);
+    });
+  }, 10000);
 
 };
