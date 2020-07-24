@@ -266,9 +266,12 @@ connectable:`, connectablePeers);
 };
 
 
-// Tell the other server to be the client
+// Tell the other server to be our client
 function tellOtherToConnectToMe(socket, callback) {
-
+  messagePeer(socket, "network_connect_to_me", {
+    header: {},
+    content: {}
+  }, 1000, callback);
 };
 
 // We're going to connect as a client to every server and ask for uptime
@@ -305,7 +308,7 @@ export function start() {
               // We won't talk this way anymore
               socket.end();
               socket.destroy();
-            })
+            });
           }
         });
       });

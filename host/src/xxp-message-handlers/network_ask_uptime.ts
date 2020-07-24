@@ -1,5 +1,4 @@
-// Simply responds with a random number
-// Useful for elections?
+// Responds with uptime so we can determine who acts as a server or client
 
 import sharedcache from "../modules/sharedcache";
 
