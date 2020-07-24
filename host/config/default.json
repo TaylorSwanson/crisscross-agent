@@ -1,7 +1,6 @@
 {
   "suffix": "dev",
   "port": 1052,
-  "reqPort": 1053,
   "internalPort": 15001,
   "useMultipass": true,
   "netTimeout": 10000,

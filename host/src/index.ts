@@ -14,7 +14,7 @@ import config from "config";
 import * as hostserver from "./modules/host-server";
 import sharedcache from "./modules/sharedcache";
 import * as hostclient from "./modules/host-client";
-import * as guesthostzmq from "./modules/guest-host-zmq";
+import * as guestServer from "./modules/guest-server";
 import * as serverApi from "./modules/server-api";
 import * as aliveWatcher from "./modules/alive-watcher";
 import * as groupTimer from "./modules/group-timer";
@@ -93,7 +93,7 @@ function tryGettingPeers() {
 // If the API is down it will continue to check until there is no error
 tryGettingPeers();
 
-guesthostzmq.start();
+guestServer.start();
 
 // Start keepalive watcher
 groupTimer.randomTimer("alive", 60, 10, aliveWatcher.keepAliveFunction);

@@ -3,7 +3,7 @@
 import fs from "fs";
 import path from "path";
 
-import zmq from "zeromq";
+import net from "net";
 
 
 const handlers = {};
@@ -29,18 +29,19 @@ files.forEach(file => {
   // Save method to the respective handler
   handlers[handlerName] = require(handlerPath);
 
-  console.log(`Registered zmq handler: ${handlerName}`);
+  console.log(`Registered guest handler: ${handlerName}`);
 });
 
 // Message when there's no registered handlers found
 if (Object.getOwnPropertyNames(handlers).length === 0)
-  console.log("No zmq message handlers found");
+  console.log("No guest message handlers found");
 
-export async function zmqHandlers(sock: zmq.Socket, type: string, message: string) {
-  if (!handlers.hasOwnProperty(type)) {
-    throw new Error(`No handler exists for message the guest application sent: ${type}`);
+
+export default function(socket: net.Socket, message: string) {
+  if (!handlers.hasOwnProperty(message)) {
+    throw new Error(`No handler exists for message the guest application sent: ${message}`);
   }
 
   // Trigger handler
-  return await handlers[type](sock, message);
+  return handlers[message](socket);
 }

@@ -1,7 +1,7 @@
 // Symple node crypto md5 wrapper function
-const crypto = require("crypto");
+import crypto from "crypto";
 
-module.exports = function digest(string, encoding) {
+export default function digest(string: string, encoding: any): string {
   const hash = crypto.createHash("md5");
   return hash.update(string, "utf8").digest(encoding || "hex");
 };

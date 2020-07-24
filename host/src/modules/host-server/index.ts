@@ -20,7 +20,7 @@ let server: Server;
 
 const activeSockets = {};
 
-const port = config.get("port");
+const port = config.get("internalPort");
 const hostname = os.hostname().trim().toLowerCase();
 
 export function start() {

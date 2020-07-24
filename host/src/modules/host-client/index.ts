@@ -4,7 +4,7 @@ import net from "net";
 import os from "os";
 
 import * as messager from "../messager";
-const messageHandler = require("../../xxp-message-handlers");
+import messageHandler from "../../xxp-message-handlers";
 
 import xxp from "xxp";
 

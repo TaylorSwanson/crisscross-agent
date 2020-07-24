@@ -1,4 +1,4 @@
-# Message subjects
+# Message subjects from host application
 Each subject will have metadata attached.
 
 - `peer_added` emitted once a server on the network has been attached
@@ -8,3 +8,6 @@ Each subject will have metadata attached.
 - `shutdown_ready` response from application when node can be safely shut down
 - `health_check ` emitted if the node is accepting health checks in-application
 - `health_request` emitted if the network wants to know the status of the application
+
+# Message subjects accepted by host application from guest
+- `peer_listing` replied 

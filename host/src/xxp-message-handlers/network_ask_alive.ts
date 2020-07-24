@@ -7,7 +7,7 @@ import * as groupTimer from "../modules/group-timer";
 import * as aliveWatcher from "../modules/alive-watcher";
 import * as messager from "../modules/messager";
 
-const xxp = require("xxp");
+import xxp from "xxp";
 
 module.exports = function({ header, content, socket }) {
 
