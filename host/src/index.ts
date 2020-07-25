@@ -13,11 +13,7 @@ import config from "config";
 
 import * as hostserver from "./modules/host-server";
 import sharedcache from "./modules/sharedcache";
-import * as hostclient from "./modules/host-client";
-import * as guestServer from "./modules/guest-server";
-import * as aliveWatcher from "./modules/alive-watcher";
-import * as groupTimer from "./modules/group-timer";
-import * as messager from "./modules/messager";
+import * as connector from "./modules/connector";
 
 // const packetFactory = require("xxp").packetFactory;
 
@@ -63,7 +59,7 @@ hostserver.start();
 
 // Attempt to check for servers
 // If the API is down it will recursively continue to check until there is no error
-messager.start();
+connector.start();
 
 // guestServer.start();
 

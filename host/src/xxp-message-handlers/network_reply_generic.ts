@@ -26,21 +26,19 @@ module.exports = function({ header, content, socket }) {
     return console.warn("No pendingRequests object in sharedcache");
   
   // Check for response packetid-specific handler
-  if (!sharedcache.pendingRequests.hasOwnProperty(responseToId))
-    return console.log("Pending request is closed:", responseToId);
+  if (!sharedcache.pendingRequests[responseToId])
+    return console.log(hostname, "-", "Pending request is closed:", responseToId);
   
   // Trigger the callback
   const cbFunction = sharedcache.pendingRequests[responseToId];
   if (typeof cbFunction != "function")
     throw new Error("Network reply callback must be a function");
 
+  console.log(hostname, "-", "generic callback", content, responseToId);
   cbFunction(null, { header, content, socket });
-  
-  // Clear any timeouts for this request
-  // console.log(`${hostname} - pending keys`, Object.keys(sharedcache.pendingRequestTimeouts));
-  // console.log(`${hostname} - currently removing key`, responseToId);
-  if (sharedcache.pendingRequestTimeouts.hasOwnProperty(responseToId)) {
-    clearTimeout(sharedcache.pendingRequestTimeouts[responseToId]);
-    delete sharedcache.pendingRequestTimeouts[responseToId];
-  }
+
+  // Remove this handler to prevent duplicate callbacks
+  clearTimeout(sharedcache.pendingRequestTimeouts[responseToId]);
+  delete sharedcache.pendingRequests[responseToId];
+  delete sharedcache.pendingRequestTimeouts[responseToId];
 };
