@@ -86,7 +86,7 @@ https://github.com/TaylorSwanson/crisscross-example-project
 A single executable file is created called `xxhost` which is distributed to each
 node and has no dependencies, since node is packed inside.
 
-## Development process
+## Old development process
 - Start multipass instances in a cluster, use `addCluster.sh <number>`. On
 some occasions this will not work because of a socket error, try again and it
 should work.
@@ -95,3 +95,7 @@ should work.
 - Once done, clean up the cluster by running `deleteAllNodes.sh` or pause all
 instances by running `stopAllNodes.sh`. Deleting nodes requires you to create
 the cluster again.
+
+## New development process
+- Use the web UI to create a cluster locally
+- This simulates the real environment

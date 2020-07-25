@@ -6,6 +6,7 @@ import config from "config";
 import * as messager from "../messager";
 import * as serverApi from "../server-api";
 import * as hostclient from "../host-client";
+import * as hostserver from "../host-server";
 import sharedcache from "../sharedcache";
 import { Socket } from "net";
 
@@ -53,10 +54,13 @@ function determineRole(socket: Socket) {
   }, 2000, (err, response) => {
     if (err) {
       console.log(hostname, "-", "err", err);
+      
+      // This is really only relevant in dev environment
+      // Normally servers are added one-by-one and the network is notified
+      // In this case, the network doesn't know when a server is ready or added
+      attemptToConnectToPeer({ address: socket.localAddress });
       // Throw away socket, try again
       socket.destroy();
-
-      // attemptToConnectToPeer(peer);
       return;
     }
     
@@ -93,6 +97,7 @@ function determineRole(socket: Socket) {
 
 function attemptToConnectToPeer(peer) {
   hostclient.connectTo(peer.address, config.get("internalPort"), (err, socket) => {
+    if (err) return console.log(err);
     // Wait for xxp listener to be ready
     determineRole(socket);
   });
