@@ -1,6 +1,8 @@
 #cloud-config
-# runcmd:
-#   - curl -SLsf "https://deb.nodesource.com/setup_14.x" | sh
-#   - apt-get install -y nodejs
-#   - npm install -g forever
-final_message: "Node up after $UPTIME at $TIMESTAMP"
+# users:
+#   - name: crisscross
+#     groups: sudo
+#     shell: /bin/bash
+# system_info:
+#   default_user:
+#     name: crisscross

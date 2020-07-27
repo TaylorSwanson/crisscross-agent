@@ -32,10 +32,18 @@ module.exports.createServer = function(config, callback) {
 
     const ipaddr = words[0].trim();
     const name = words[1].trim();
-    
-    return callback(null, {
-      ipv4: ipaddr,
-      name
+
+    // Add xxhost to server and start it
+    child_process.exec(path.join(cdw, "updateNodes.sh"), (err, stdout, stderr) => {
+      if (err) return callback(err, stdout, stderr);
+      child_process.exec(path.join(cdw, "startSingleNode.sh", [name]), (err, stdout, stderr) => {
+        if (err) return callback(err, stdout, stderr);
+
+        callback(null, {
+          ipv4: ipaddr,
+          name
+        });
+      });
     });
   });
 };

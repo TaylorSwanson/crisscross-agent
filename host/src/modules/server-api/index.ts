@@ -2,14 +2,16 @@
 
 import child_process from "child_process";
 import http from "http";
-import path from "path";
+import os from "os";
 
 import config from "config";
 
 import * as digitalocean from "digitalocean";
+import pair from "./pair";
 
 // This is valid in the linux multipass servers
 const getGateway = "ip route show | grep 'default' | awk '{print $3}'";
+const hostname = os.hostname();
 
 let doClient: any;
 if (!config.has("useMultipass")) {
@@ -116,3 +118,5 @@ export function createServer(config, callback) {
     // TODO Use DO API to create the server
   }
 };
+
+pair();

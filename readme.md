@@ -99,3 +99,4 @@ the cluster again.
 ## New development process
 - Use the web UI to create a cluster locally
 - This simulates the real environment
+- Use node cli tool in backend to communicate with local cluster ip addresses
