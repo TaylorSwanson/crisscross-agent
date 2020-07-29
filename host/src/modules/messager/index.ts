@@ -3,10 +3,10 @@
 
 import os from "os";
 
-const xxp = require("xxp");
 import config from "config";
 
 import * as connector from "../connector";
+import * as xxp from "../xxp";
 import sharedcache from "../sharedcache";
 import { Socket } from "net";
 
@@ -113,9 +113,9 @@ export function messagePeer(
     return callback("No socket");
   }
 
-  console.log(`${hostname} - Message across xxp - ${type}`)
+  console.log(`${hostname} - Sending across xxp - ${type}`)
 
-  const packet = xxp.packetFactory.newPacket({
+  const packet = xxp.packetFactory({
     header: { type, ...payload.header }, content: payload.content
   });
   const packetId = packet.id;
@@ -189,6 +189,7 @@ export function replyToPeer(
   timeout: number,
   callback
 ) {
+  console.log("Replying to peer", payload); 
   // @ts-ignore
   messagePeer(originalMessage.socket, "network_reply_generic", {
     header: {

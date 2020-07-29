@@ -14,7 +14,7 @@ import messageHandler from "../../xxp-message-handlers";
 // const packetDecoder = require("xxp").packetDecoder;
 // const packetFactory = require("xxp").packetFactory;
 
-import { packetDecoder } from "xxp";
+import * as xxp from "../xxp";
 
 let server: Server;
 
@@ -24,7 +24,7 @@ const port = config.get("internalPort");
 const hostname = os.hostname().trim().toLowerCase();
 
 
-function askOtherToIdentify(socket) {
+function doHandshake(socket) {
   // Identify to the server who we are
   messager.messagePeer(socket, "network_handshake_identify", {
     header: {},
@@ -32,9 +32,7 @@ function askOtherToIdentify(socket) {
       name: hostname
     }
   }, messager.Timeout.None, (err) => {
-    if (err) {
-      console.error(err);
-    }
+    if (err) console.error(err);
   });
 };
 
@@ -42,21 +40,23 @@ export function start() {
   console.log(`${hostname} - Starting host server`, hostname);
 
   server = net.createServer(socket => {
-    const localAddress = socket.localAddress;
-    console.log(`${hostname} - A client connected`);
     // Client connected
+    socket.pause();
+
+    const socketAddress = socket.localAddress;
+    console.log(`${hostname} - A client connected`);
     
-    console.log(`${hostname} - I'm a server to ${localAddress}, registering handlers`);
+    console.log(`${hostname} - I'm a server to ${socketAddress}, registering handlers`);
 
     // This lets the server handle incoming messages with the message handlers
-    packetDecoder(socket, messageHandler);
+    xxp.packetDecoder(socket, messageHandler);
 
     // Add as client
-    askOtherToIdentify(socket);
+    doHandshake(socket);
     
     // Client dropped out
     socket.on("end", () => {
-      console.log(`${hostname} - client at ${localAddress} disconnected`);
+      console.log(`${hostname} - client at ${socketAddress} disconnected`);
 
       messager.removeClientBySocket(socket);
 

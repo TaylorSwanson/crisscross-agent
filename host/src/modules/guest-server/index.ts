@@ -67,6 +67,5 @@ export function start() {
 export function sendToAll(type: string, err: string, payload: object) {
   if (!isBound)
     throw new Error("Cannot send message over socket - start server first");
-
   
 };

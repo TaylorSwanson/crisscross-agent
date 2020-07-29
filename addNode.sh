@@ -19,7 +19,7 @@ INSTANCENAME=`openssl rand -hex 5`
 INSTANCENAME="x$INSTANCENAME"
 
 # # Do the magic with multipass
-multipass launch -vv -d 512M -m 360M -n "$INSTANCENAME" --cloud-init ./dev_cloud_init.yml
+multipass launch -vv -d 512M -m 360M -n "$INSTANCENAME" --cloud-init ./dev_cloud_init.yml focal
 
 # Send this archive over to new instance
 NEWIP=$(multipass list | grep $INSTANCENAME | awk '{print $3}')

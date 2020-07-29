@@ -40,6 +40,7 @@ if (Object.getOwnPropertyNames(handlers).length === 0)
 // Call workerHandlers() with payload and the master can send info to workers
 // { header, content, socket }
 export = function(payload) {
+  console.log("Received over xxp:", payload);
   // console.log("payload", payload);
   try {
     payload.header = JSON.parse(payload.header);
@@ -61,6 +62,8 @@ export = function(payload) {
     return console.error({ payload }, "No handler defined for message type");
   if (typeof handlers[payload.header.type] !== "function")
     return console.error({ handler: handlers[payload.header.type] }, "Handler is not a function");
+
+
 
   // We'll need to reply to the worker with the result of this event
   // console.log(`${hostname} - Calling handler for`, payload.header.type);
