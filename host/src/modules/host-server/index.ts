@@ -7,7 +7,6 @@ import os from "os";
 
 import config from "config";
 
-import sharedcache from "../sharedcache";
 import * as messager from "../messager";
 import messageHandler from "../../xxp-message-handlers";
 
@@ -95,6 +94,7 @@ module.exports.dropClient = function(socket, callback) {
 
   // // Send last message to prevent reconnect, acknowledge
   // socket.end(packet, callback);
+  // socket.destroy();
 
   // // Remove reference
   // delete activeSockets[ip];

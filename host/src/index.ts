@@ -12,8 +12,10 @@ import path from "path";
 import config from "config";
 
 import * as hostserver from "./modules/host-server";
+import * as serverApi from "./modules/server-api";
 import sharedcache from "./modules/sharedcache";
 import * as connector from "./modules/connector";
+import * as seedServer from "./modules/seed-server";
 
 // const packetFactory = require("xxp").packetFactory;
 
@@ -61,7 +63,16 @@ hostserver.start();
 // If the API is down it will recursively continue to check until there is no error
 connector.start();
 
-// guestServer.start();
+// Start pair
+serverApi.start();
+
+// Determine if we are seed server
+// If so, start that server
+// Don't start seed server on non-seed hosts for memory saving purposes
+const seedServerPath = path.join(os.homedir(), ".xxhost", "seedservver");
+if (fs.existsSync(seedServerPath)) {
+  seedServer.start();
+}
 
 // // Start keepalive watcher
 // groupTimer.randomTimer("alive", 60, 10, aliveWatcher.keepAliveFunction);

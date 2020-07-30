@@ -9,7 +9,6 @@ import config from "config";
 
 
 const hostname = os.hostname();
-const getGateway = "ip route show | grep 'default' | awk '{print $3}'";
 
 export default function pair() {
   
@@ -32,7 +31,11 @@ export default function pair() {
 
   // Send pairing message
   const pairKeyPath = path.join(os.homedir(), ".xxhost", "pairkey");
-  if (fs.existsSync(pairKeyPath)) {
+  const pairKeyPendingPath = path.join(os.homedir(), ".xxhost", "pairkeypending");
+
+  if (fs.existsSync(pairKeyPendingPath)) {
+    console.log("Found pending pair key");
+
     const pairKey = fs.readFileSync(pairKeyPath).toString("utf8").trim();
     const pairKeyResponse = JSON.stringify({
       address,
@@ -40,9 +43,14 @@ export default function pair() {
       pairKey
     });
 
-    // TODO make http request to server webhook at gateway
-    // We need to know the default gateway to connect to the spoof server
-    const gateway = child_process.execSync(getGateway).toString("utf8").trim();
+    let gateway = "";
+    if (!process.env.PRODUCTION) {
+      // We need to know the default gateway to connect to the API server
+      const getGateway = "ip route show | grep 'default' | awk '{print $3}'";
+      gateway = child_process.execSync(getGateway).toString("utf8").trim();
+    } else {
+      gateway = "api.crisscross.app";
+    }
 
     // Make request to spoof server
     const options = {
@@ -72,12 +80,23 @@ export default function pair() {
     req.write(pairKeyResponse, (err) => {
       if (err) throw err;
 
+      console.log("Triggered pair webhook");
+
       req.end();
       req.destroy();
     });
 
-    // Delete the file so we don't auth again
-    fs.unlinkSync(pairKeyPath);
+    req.setTimeout(5000);
+
+    req.on("error", () => {});
+    req.on("close", () => {});
+    req.on("timeout", () => {
+      console.log(`Could not connect to pairing webhook (timeout): \
+${options.host}:${options.port}${options.path}`);
+
+      console.log("Trying again in 1 minute");
+      setTimeout(pair, 1000 * 60);
+    });
 
   }
 }

@@ -119,4 +119,6 @@ export function createServer(config, callback) {
   }
 };
 
-pair();
+export function start() {
+  pair();
+};
