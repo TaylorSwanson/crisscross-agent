@@ -5,5 +5,6 @@
   "internalPort": 15001,
   "useMultipass": true,
   "netTimeout": 10000,
-  "XX_APPDIR": true
+  "XX_APPDIR": true,
+  "seedPort": 5051
 }

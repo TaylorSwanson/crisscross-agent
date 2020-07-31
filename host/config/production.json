@@ -2,5 +2,6 @@
   "suffix": "prod",
   "port": 1025,
   "webPort": 443,
-  "internalPort": 15001
+  "internalPort": 15001,
+  "seedPort": 5051
 }
