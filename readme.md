@@ -52,7 +52,7 @@ rolling distributions and updates using the same network. The agent essentially
 runs the application's configuration while the guest sits on top. The guest app
 has access to the network but its use is not required. It doesn't even need to
 know that it's being run on a cluster, the only necessary components are a conf
-file and a few scripts if specified in the conf file. Each app should be its own
+file and a few scripts if specified in the conf file. Each app could be its own
 git repo, which can be configured in the settings dashboard. This lets the
 config files stay with the guest application, and allows the guest to update
 based on the git version.

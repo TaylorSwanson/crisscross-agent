@@ -22,11 +22,16 @@ export function start() {
   app.use(bodyParser.urlencoded({
     extended: true
   }));
-
+  
+  app.use(require("./middleware/LoggerMiddleware"));
+  
   // Load routes
   app.use(routeFactory(__dirname));
+
 
   // NOTE by nature, requests sent over this channel are not secure
   // All secure communication is over webhooks to the UI API servers
   app.listen(port);
+
+  console.log(`Started seed server on port ${config.get("seedPort")}`);
 };

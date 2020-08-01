@@ -56,6 +56,11 @@ sharedcache["processid"] = crypto.randomBytes(4).toString("hex");
 // We need uptime in ms
 sharedcache["starttime"] = new Date().getTime();
 
+// Load the pairkey to authenticate
+const pairKeyPath = path.join(os.homedir(), ".xxhost", "pairkey");
+const pairKey = fs.readFileSync(pairKeyPath).toString("utf8").trim();
+sharedcache["pairkey"] = pairKey;
+
 // Init server setup
 hostserver.start();
 
@@ -69,7 +74,7 @@ serverApi.start();
 // Determine if we are seed server
 // If so, start that server
 // Don't start seed server on non-seed hosts for memory saving purposes
-const seedServerPath = path.join(os.homedir(), ".xxhost", "seedservver");
+const seedServerPath = path.join(os.homedir(), ".xxhost", "seedserver");
 if (fs.existsSync(seedServerPath)) {
   seedServer.start();
 }

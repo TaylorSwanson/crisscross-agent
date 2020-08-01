@@ -15,7 +15,7 @@ if [ ! -d "$BASEDIR/host/node_modules" ]; then
 fi
 
 # Node needs a random name to prevent collisions
-INSTANCENAME=`openssl rand -hex 5`
+INSTANCENAME=`openssl rand -hex 4`
 INSTANCENAME="x$INSTANCENAME"
 
 # # Do the magic with multipass

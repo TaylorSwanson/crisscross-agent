@@ -36,6 +36,8 @@ export default function pair() {
   if (fs.existsSync(pairKeyPendingPath)) {
     console.log("Found pending pair key");
 
+    let timeout;
+
     const pairKey = fs.readFileSync(pairKeyPath).toString("utf8").trim();
     const pairKeyResponse = JSON.stringify({
       address,
@@ -82,6 +84,8 @@ export default function pair() {
 
       console.log("Triggered pair webhook");
 
+      clearTimeout(timeout);
+
       req.end();
       req.destroy();
     });
@@ -95,7 +99,7 @@ export default function pair() {
 ${options.host}:${options.port}${options.path}`);
 
       console.log("Trying again in 1 minute");
-      setTimeout(pair, 1000 * 60);
+      timeout = setTimeout(pair, 1000 * 60);
     });
 
   }

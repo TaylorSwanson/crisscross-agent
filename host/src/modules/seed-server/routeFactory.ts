@@ -16,6 +16,8 @@ function walkDir(dir: string, callback) {
 export default function generateRoutes(rootDir: string) {
   const router = require("express").Router();
 
+  rootDir = path.join(rootDir, "routes");
+
   // Scan through routes directory and find deepest files
   walkDir(rootDir, (filepath: string) => {
     if (filepath.endsWith(".map")) return;
@@ -23,7 +25,7 @@ export default function generateRoutes(rootDir: string) {
     const relpath = filepath.slice(rootDir.length);
     const reqpath = path.dirname(relpath);
 
-    // Method to use is the filename with ext trimmed off
+    // Method to use is the filename with ext (.js) trimmed off
     let method = path.basename(filepath);
     method = method.substring(0, method.length-3);
     const route = require(filepath);
