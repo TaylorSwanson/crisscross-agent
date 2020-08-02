@@ -1,6 +1,6 @@
 // This module helps communicate with the peers by connecting to their servers
 
-import net, { Socket } from "net";
+import net from "net";
 import os from "os";
 
 import * as messager from "../messager";

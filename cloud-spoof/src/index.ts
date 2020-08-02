@@ -1,13 +1,13 @@
-const fs = require("fs");
+import fs from "fs";
 
-const express = require("express");
+import express from "express";
 const app = express();
-const bodyParser = require("body-parser");
+import bodyParser from "body-parser";
 
-const showdown = require("showdown");
+import showdown from "showdown";
 const mdConverter = new showdown.Converter();
 
-const serverApi = require("./server-api");
+import * as serverApi from "./server-api";
 
 app.use((req, res, next) => {
   console.log(`${Date.now()}: ${req.method} ${req.path}`);
@@ -30,7 +30,8 @@ app.get("/servers", (req, res, next) => {
 
 app.post("/servers", (req, res, next) => {
   serverApi.createServer({
-    tag: req.body.tag
+    pairKey: req.body.pairKey,
+    dotoken: req.body.dotoken
   }, (err, result) => {
     if (err) return res.status(500).send(err);
 

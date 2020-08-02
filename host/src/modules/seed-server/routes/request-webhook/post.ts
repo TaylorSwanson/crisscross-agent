@@ -9,7 +9,7 @@ export function handler(req, res, next): void {
   
   const hook = req.body.hook;
 
-  model.makeWebhookCall(hook, (err: Error, result) => {
+  model.makeWebhookCall(hook, {  }, (err: Error, result) => {
     if (err) return next(err);
 
     console.log("Called hook", result);

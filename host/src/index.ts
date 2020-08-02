@@ -61,6 +61,11 @@ const pairKeyPath = path.join(os.homedir(), ".xxhost", "pairkey");
 const pairKey = fs.readFileSync(pairKeyPath).toString("utf8").trim();
 sharedcache["pairkey"] = pairKey;
 
+// Load the pairkey to authenticate
+const dotokenPath = path.join(os.homedir(), ".xxhost", "DOTOKEN");
+const dotoken = fs.readFileSync(dotokenPath).toString("utf8").trim();
+sharedcache["dotoken"] = dotoken;
+
 // Init server setup
 hostserver.start();
 
