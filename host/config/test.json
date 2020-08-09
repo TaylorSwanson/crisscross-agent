@@ -1,7 +1,0 @@
-{
-  "suffix": "test",
-  "port": 1027,
-  "webPort": 5050,
-  "internalPort": 15001,
-  "seedPort": 5051
-}
